@@ -9,33 +9,75 @@ Sub RefreshIBGHeadcountByMonth()
     Dim fullPath As String
     Dim wbSource As Workbook
     Dim monthCell As Range
-    Dim chCol As Long
-    Dim searchRange As Range
-    Dim cell As Range
-    Dim lastCol As Long
+    Dim targetCol As Long
+    Dim templateCol As Long
     Dim alreadyOpen As Boolean
     Dim wb As Workbook
+    Dim userInput As String
+    Dim cell As Range
 
     ' ---- SETTINGS ----
     Set wsProductivity = ThisWorkbook.Sheets("Productivity")
+    templateCol = wsProductivity.Range("CH1").Column  ' CH is master template column
 
-    ' Get column number for CH
-    chCol = wsProductivity.Range("CH18").Column
+    ' ---- ASK USER WHICH COLUMN TO UPDATE ----
+    userInput = InputBox("Enter the column letter to update (e.g. CI, CJ, CK):" & vbNewLine & vbNewLine & _
+                         "Note: CH is the template column and cannot be overwritten.", _
+                         "Which Column To Update?")
 
-    ' Both year and month extracted from CH18
-    Set monthCell = wsProductivity.Cells(18, chCol)  ' e.g. 01/03/2026
-
-    ' Validate cell has a date
-    If Not IsDate(monthCell.Value) Then
-        MsgBox "CH18 does not contain a valid date. Please check.", vbExclamation, "Invalid Date"
+    ' User cancelled
+    If userInput = "" Then
+        MsgBox "No column entered. Macro cancelled.", vbExclamation, "Cancelled"
         Exit Sub
     End If
 
-    ' Build YYYYMM prefix from CH18
-    yearVal = Format(monthCell.Value, "YYYY")   ' → "2026"
-    monthVal = Format(monthCell.Value, "MM")    ' → "03"
+    ' Convert input to uppercase and get column number
+    userInput = UCase(Trim(userInput))
 
-    ' Build file name and path dynamically
+    ' Validate it's a valid column
+    On Error Resume Next
+    targetCol = wsProductivity.Range(userInput & "1").Column
+    On Error GoTo 0
+
+    If targetCol = 0 Then
+        MsgBox "'" & userInput & "' is not a valid column. Please enter a valid column letter (e.g. CI, CJ).", _
+               vbExclamation, "Invalid Column"
+        Exit Sub
+    End If
+
+    ' Prevent overwriting template column CH
+    If targetCol = templateCol Then
+        MsgBox "Column CH is the template column and cannot be overwritten.", _
+               vbExclamation, "Invalid Column"
+        Exit Sub
+    End If
+
+    ' ---- READ DATE FROM ROW 18 OF TARGET COLUMN ----
+    Set monthCell = wsProductivity.Cells(18, targetCol)
+
+    If Not IsDate(monthCell.Value) Then
+        MsgBox "Row 18 of column " & userInput & " does not contain a valid date. Please check.", _
+               vbExclamation, "Invalid Date"
+        Exit Sub
+    End If
+
+    ' Build YYYYMM from target column's row 18
+    yearVal = Format(monthCell.Value, "YYYY")
+    monthVal = Format(monthCell.Value, "MM")
+
+    ' Confirm with user before proceeding
+    Dim confirm As Integer
+    confirm = MsgBox("About to update column " & userInput & " using date: " & monthVal & "/" & yearVal & vbNewLine & vbNewLine & _
+                     "File: " & yearVal & monthVal & "_Regional IBG Staff Role Tagging.xlsx" & vbNewLine & _
+                     "Folder: \IBG Headcount\" & yearVal & "\" & vbNewLine & vbNewLine & _
+                     "Proceed?", vbYesNo + vbQuestion, "Confirm Update")
+
+    If confirm = vbNo Then
+        MsgBox "Macro cancelled.", vbInformation, "Cancelled"
+        Exit Sub
+    End If
+
+    ' ---- BUILD FILE PATH ----
     fileName = yearVal & monthVal & "_Regional IBG Staff Role Tagging.xlsx"
     filePath = "\\nassgdce1bvc1\IBG_Reg1&2_Vol1\IBG Reg 1&2\Qlikview\IBG Headcount\" & yearVal & "\"
     fullPath = filePath & fileName
@@ -43,58 +85,57 @@ Sub RefreshIBGHeadcountByMonth()
     ' ---- CHECK FILE EXISTS ----
     If Dir(fullPath) = "" Then
         MsgBox "File not found: " & fullPath & vbNewLine & vbNewLine & _
-               "Please check that the file exists and the network drive is accessible.", _
+               "Please check the file exists and network drive is accessible.", _
                vbExclamation, "File Missing"
         Exit Sub
     End If
 
-    ' ---- UPDATE FORMULAS FROM COLUMN CH ONWARDS ----
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
 
+    ' ---- COPY FORMULAS FROM CH (TEMPLATE) TO TARGET COLUMN ----
+    ' Find last used row in template column CH
+    Dim lastRow As Long
+    lastRow = wsProductivity.Cells(wsProductivity.Rows.Count, templateCol).End(xlUp).Row
+
     Dim newPrefix As String
+    Dim oldPrefix As String
+    Dim r As Long
+    Dim templateCell As Range
+    Dim targetCell As Range
+    Dim cellFormula As String
+    Dim pos As Long
+
     newPrefix = yearVal & monthVal  ' e.g. "202603"
 
-    For Each wsSheet In ThisWorkbook.Sheets
+    For r = 1 To lastRow
+        Set templateCell = wsProductivity.Cells(r, templateCol)
+        Set targetCell = wsProductivity.Cells(r, targetCol)
 
-        ' Find last used column from row 18 onwards
-        lastCol = wsSheet.Cells(18, wsSheet.Columns.Count).End(xlToLeft).Column
+        ' Only copy formula cells
+        If templateCell.HasFormula Then
+            cellFormula = templateCell.Formula
 
-        ' Only proceed if there are columns from CH onwards
-        If lastCol >= chCol Then
-            Set searchRange = wsSheet.Range(wsSheet.Columns(chCol), wsSheet.Columns(lastCol))
-
-            On Error Resume Next
-            Dim formulaCells As Range
-            Set formulaCells = searchRange.SpecialCells(xlCellTypeFormulas)
-            On Error GoTo 0
-
-            If Not formulaCells Is Nothing Then
-                For Each cell In formulaCells
-                    If InStr(cell.Formula, "_Regional IBG Staff Role Tagging.xlsx") > 0 Then
-
-                        Dim cellFormula As String
-                        cellFormula = cell.Formula
-
-                        Dim pos As Long
-                        pos = InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx")
-
-                        If pos > 6 Then
-                            Dim oldPrefix As String
-                            oldPrefix = Mid(cellFormula, pos - 6, 6)
-
-                            ' Only replace if it looks like YYYYMM (all digits)
-                            If IsNumeric(oldPrefix) And oldPrefix <> newPrefix Then
-                                cell.Formula = Replace(cellFormula, oldPrefix, newPrefix)
-                            End If
-                        End If
-
+            ' Replace old YYYYMM with new one
+            If InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx") > 0 Then
+                pos = InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx")
+                If pos > 6 Then
+                    oldPrefix = Mid(cellFormula, pos - 6, 6)
+                    If IsNumeric(oldPrefix) Then
+                        cellFormula = Replace(cellFormula, oldPrefix, newPrefix)
                     End If
-                Next cell
+                End If
             End If
+
+            ' Paste updated formula into target column
+            targetCell.Formula = cellFormula
+
+        ElseIf Not IsEmpty(templateCell) Then
+            ' Copy non-formula, non-empty values (e.g. labels, headers)
+            targetCell.Value = templateCell.Value
         End If
 
-    Next wsSheet
+    Next r
 
     ' ---- OPEN SOURCE FILE ----
     alreadyOpen = False
@@ -113,7 +154,7 @@ Sub RefreshIBGHeadcountByMonth()
     ' ---- RECALCULATE ----
     Application.CalculateFull
 
-    ' ---- CLOSE SOURCE FILE (if we opened it) ----
+    ' ---- CLOSE SOURCE FILE ----
     If Not alreadyOpen Then
         wbSource.Close SaveChanges:=False
     End If
@@ -121,7 +162,7 @@ Sub RefreshIBGHeadcountByMonth()
     Application.ScreenUpdating = True
     Application.DisplayAlerts = True
 
-    MsgBox "Done! IBG Headcount refreshed for: " & monthVal & "/" & yearVal, _
+    MsgBox "Done! Column " & userInput & " updated for: " & monthVal & "/" & yearVal, _
            vbInformation, "Refresh Complete"
 
 End Sub

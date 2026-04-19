@@ -15,6 +15,15 @@ Sub RefreshIBGHeadcountByMonth()
     Dim wb As Workbook
     Dim userInput As String
     Dim cell As Range
+    Dim lastRow As Long
+    Dim newPrefix As String
+    Dim oldPrefix As String
+    Dim r As Long
+    Dim templateCell As Range
+    Dim targetCell As Range
+    Dim cellFormula As String
+    Dim pos As Long
+    Dim colOffset As Long
 
     ' ---- SETTINGS ----
     Set wsProductivity = ThisWorkbook.Sheets("Productivity")
@@ -31,7 +40,7 @@ Sub RefreshIBGHeadcountByMonth()
         Exit Sub
     End If
 
-    ' Convert input to uppercase and get column number
+    ' Convert input to uppercase and trim spaces
     userInput = UCase(Trim(userInput))
 
     ' Validate it's a valid column
@@ -65,7 +74,7 @@ Sub RefreshIBGHeadcountByMonth()
     yearVal = Format(monthCell.Value, "YYYY")
     monthVal = Format(monthCell.Value, "MM")
 
-    ' Confirm with user before proceeding
+    ' ---- CONFIRM WITH USER BEFORE PROCEEDING ----
     Dim confirm As Integer
     confirm = MsgBox("About to update column " & userInput & " using date: " & monthVal & "/" & yearVal & vbNewLine & vbNewLine & _
                      "File: " & yearVal & monthVal & "_Regional IBG Staff Role Tagging.xlsx" & vbNewLine & _
@@ -94,29 +103,19 @@ Sub RefreshIBGHeadcountByMonth()
     Application.DisplayAlerts = False
 
     ' ---- COPY FORMULAS FROM CH (TEMPLATE) TO TARGET COLUMN ----
-    ' Find last used row in template column CH
-    Dim lastRow As Long
     lastRow = wsProductivity.Cells(wsProductivity.Rows.Count, templateCol).End(xlUp).Row
-
-    Dim newPrefix As String
-    Dim oldPrefix As String
-    Dim r As Long
-    Dim templateCell As Range
-    Dim targetCell As Range
-    Dim cellFormula As String
-    Dim pos As Long
-
     newPrefix = yearVal & monthVal  ' e.g. "202603"
+    colOffset = targetCol - templateCol  ' How many columns away from CH
 
     For r = 1 To lastRow
         Set templateCell = wsProductivity.Cells(r, templateCol)
         Set targetCell = wsProductivity.Cells(r, targetCol)
 
-        ' Only copy formula cells
         If templateCell.HasFormula Then
             cellFormula = templateCell.Formula
 
-            ' Replace old YYYYMM with new one
+            ' ---- CASE 1: File reference formula (COUNTIFS etc) ----
+            ' Manually replace YYYYMM prefix so it points to correct file
             If InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx") > 0 Then
                 pos = InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx")
                 If pos > 6 Then
@@ -125,14 +124,20 @@ Sub RefreshIBGHeadcountByMonth()
                         cellFormula = Replace(cellFormula, oldPrefix, newPrefix)
                     End If
                 End If
+                targetCell.Formula = cellFormula
+
+            ' ---- CASE 2: SUM or other formulas referencing own column ----
+            ' Use Copy + PasteSpecial so Excel automatically shifts column references
+            Else
+                templateCell.Copy
+                targetCell.PasteSpecial Paste:=xlPasteFormulas
+                Application.CutCopyMode = False
             End If
 
-            ' Paste updated formula into target column
-            targetCell.Formula = cellFormula
-
+        ' ---- CASE 3: Non-formula values (labels, headers) ----
         ElseIf Not IsEmpty(templateCell) Then
-            ' Copy non-formula, non-empty values (e.g. labels, headers)
             targetCell.Value = templateCell.Value
+
         End If
 
     Next r

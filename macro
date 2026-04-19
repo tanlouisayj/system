@@ -1,77 +1,34 @@
-Sub RefreshHeadcountData()
-
-    Dim wsProductivity As Worksheet
-    Dim yearVal As String
-    Dim monthVal As String
-    Dim fileName As String
-    Dim filePath As String
-    Dim fullPath As String
-    Dim wbSource As Workbook
-    Dim monthCell As Range
-    Dim chCol As Long
+' ---- UPDATE FORMULAS IN CH AND CI COLUMNS ----
+    Dim wsSheet As Worksheet
+    Dim cell As Range
+    Dim oldPrefix As String
+    Dim newPrefix As String
+    Dim searchRange As Range
     
-    ' ---- SETTINGS ----
-    Set wsProductivity = ThisWorkbook.Sheets("Productivity")
+    ' Define the new prefix from CH18
+    newPrefix = yearVal & monthVal  ' e.g. "202603"
     
-    ' Get column number for CH
-    chCol = wsProductivity.Range("CH18").Column
-    
-    ' Both year and month extracted from CH18
-    Set monthCell = wsProductivity.Cells(18, chCol)  ' e.g. 01/03/2026
-    
-    ' Validate cell has a date
-    If Not IsDate(monthCell.Value) Then
-        MsgBox "CH18 does not contain a valid date. Please check.", vbExclamation, "Invalid Date"
-        Exit Sub
-    End If
-    
-    ' Build YYYYMM prefix from CH18
-    yearVal = Format(monthCell.Value, "YYYY")   ' → "2026"
-    monthVal = Format(monthCell.Value, "MM")    ' → "03"
-    
-    ' Build file name and path
-    fileName = yearVal & monthVal & "_Regional IBG Staff Role Tagging.xlsx"
-    filePath = "\\nassgdce1bvc1\IBG_Reg1&2_Vol1\IBG Reg 1&2\Qlikview\IBG Headcount\" & yearVal & "\"
-    fullPath = filePath & fileName
-    
-    ' ---- CHECK FILE EXISTS ----
-    If Dir(fullPath) = "" Then
-        MsgBox "File not found: " & fullPath, vbExclamation, "File Missing"
-        Exit Sub
-    End If
-    
-    ' ---- OPEN SOURCE FILE ----
-    Application.ScreenUpdating = False
-    Application.DisplayAlerts = False
-    
-    ' Check if already open
-    Dim alreadyOpen As Boolean
-    alreadyOpen = False
-    Dim wb As Workbook
-    For Each wb In Application.Workbooks
-        If wb.Name = fileName Then
-            alreadyOpen = True
-            Set wbSource = wb
-            Exit For
-        End If
-    Next wb
-    
-    ' Open if not already open
-    If Not alreadyOpen Then
-        Set wbSource = Workbooks.Open(fullPath, ReadOnly:=True, UpdateLinks:=False)
-    End If
-    
-    ' ---- RECALCULATE ----
-    Application.CalculateFull
-    
-    ' ---- CLOSE SOURCE FILE (if we opened it) ----
-    If Not alreadyOpen Then
-        wbSource.Close SaveChanges:=False
-    End If
-    
-    Application.ScreenUpdating = True
-    Application.DisplayAlerts = True
-    
-    MsgBox "Done! Data refreshed for: " & yearVal & "/" & monthVal, vbInformation, "Refresh Complete"
-
-End Sub
+    ' Loop through all sheets to find and replace old YYYYMM prefix
+    For Each wsSheet In ThisWorkbook.Sheets
+        ' Search only in CH and CI columns
+        Set searchRange = wsSheet.Range("CH:CI")
+        
+        For Each cell In searchRange.SpecialCells(xlCellTypeFormulas)
+            If InStr(cell.Formula, "_Regional IBG Staff Role Tagging.xlsx") > 0 Then
+                ' Extract old YYYYMM (6 digits before the underscore)
+                Dim cellFormula As String
+                cellFormula = cell.Formula
+                
+                Dim pos As Long
+                pos = InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx")
+                
+                If pos > 6 Then
+                    oldPrefix = Mid(cellFormula, pos - 6, 6)
+                    ' Only replace if it looks like a YYYYMM (all digits)
+                    If IsNumeric(oldPrefix) Then
+                        cell.Formula = Replace(cellFormula, oldPrefix, newPrefix)
+                    End If
+                End If
+            End If
+        Next cell
+    Next wsSheet

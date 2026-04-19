@@ -111,11 +111,14 @@ Sub RefreshIBGHeadcountByMonth()
         Set templateCell = wsProductivity.Cells(r, templateCol)
         Set targetCell = wsProductivity.Cells(r, targetCol)
 
+        ' ---- SKIP ROW 18 - preserve existing date in target column ----
+        If r = 18 Then GoTo NextRow
+
         If templateCell.HasFormula Then
             cellFormula = templateCell.Formula
 
             ' ---- CASE 1: File reference formula (COUNTIFS etc) ----
-            ' Manually replace YYYYMM prefix so it points to correct file
+            ' Manually replace YYYYMM so it points to correct file
             If InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx") > 0 Then
                 pos = InStr(cellFormula, "_Regional IBG Staff Role Tagging.xlsx")
                 If pos > 6 Then
@@ -140,6 +143,7 @@ Sub RefreshIBGHeadcountByMonth()
 
         End If
 
+NextRow:
     Next r
 
     ' ---- OPEN SOURCE FILE ----

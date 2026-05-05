@@ -96,6 +96,18 @@ input:focus, select:focus { outline: none; border-color: #555; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
 .toolbar .btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .footer { text-align: center; padding: 2rem; font-size: 12px; color: #aaa; }
+.slicer-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.slicer-panel { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1rem; }
+.slicer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.slicer-header span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; }
+.slicer-header-btns { display: flex; gap: 6px; }
+.slicer-search { width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 12px; margin-bottom: 6px; font-family: inherit; }
+.slicer-list { max-height: 160px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
+.slicer-item { display: flex; align-items: center; gap: 8px; padding: 5px 10px; cursor: pointer; border-bottom: 1px solid #f8f8f8; font-size: 12px; transition: background .1s; }
+.slicer-item:last-child { border-bottom: none; }
+.slicer-item:hover { background: #f5f5f5; }
+.slicer-item input[type=checkbox] { cursor: pointer; accent-color: #1a1a1a; }
+.slicer-item.unchecked { color: #aaa; }
 </style>
 
 </head>
@@ -216,59 +228,101 @@ input:focus, select:focus { outline: none; border-color: #555; }
 
   <div class="grid2">
     <div class="card">
-      <span class="slbl">Aggregation &amp; value</span>
-      <div class="grid2" style="margin-bottom:12px">
-        <div>
-          <label>File 1 — if multiple rows share same key</label>
-          <select id="agg1">
-            <option value="sum">Sum</option>
-            <option value="count">Count rows</option>
-            <option value="avg">Average</option>
-            <option value="min">Min</option>
-            <option value="max">Max</option>
-          </select>
-        </div>
-        <div>
-          <label>File 2</label>
-          <select id="agg2">
-            <option value="sum">Sum</option>
-            <option value="count">Count rows</option>
-            <option value="avg">Average</option>
-            <option value="min">Min</option>
-            <option value="max">Max</option>
-          </select>
-        </div>
+      <span class="slbl">Values &amp; aggregation</span>
+      <p style="font-size:12px;color:#666;margin-bottom:12px">
+        Choose which column holds the amounts, and how to combine rows when the same key appears more than once.
+      </p>
+
+```
+  <!-- File 1 value config -->
+  <div style="background:#f8f8f8;border-radius:8px;padding:12px;margin-bottom:10px">
+    <p style="font-size:12px;font-weight:600;margin-bottom:8px">File 1</p>
+    <div class="grid2" style="margin-bottom:8px">
+      <div>
+        <label>Value source</label>
+        <select id="vsrc1" onchange="toggleValueCol(1)">
+          <option value="pairedcol">Use paired column cell value</option>
+          <option value="col">Pick a specific value column</option>
+        </select>
       </div>
-      <div class="grid2">
-        <div>
-          <label>File 1 label</label>
-          <input type="text" id="lbl1" placeholder="e.g. Essbase">
-        </div>
-        <div>
-          <label>File 2 label</label>
-          <input type="text" id="lbl2" placeholder="e.g. GL">
-        </div>
+      <div id="vcoldiv1" style="display:none">
+        <label>Value column</label>
+        <select id="vcol1"></select>
       </div>
     </div>
-    <div class="card">
-      <span class="slbl">Tolerance &amp; filters</span>
-      <div style="margin-bottom:12px">
-        <label>Ignore differences smaller than</label>
-        <input type="number" id="tol" value="0.01" step="0.01" min="0">
+    <div class="grid2">
+      <div>
+        <label>Aggregation (if multiple rows per key)</label>
+        <select id="agg1">
+          <option value="sum">Sum</option>
+          <option value="count">Count rows</option>
+          <option value="avg">Average</option>
+          <option value="min">Min</option>
+          <option value="max">Max</option>
+        </select>
       </div>
-      <div class="grid2">
-        <div>
-          <span class="slbl" style="margin-bottom:4px">File 1 filters</span>
-          <div id="flist1"></div>
-          <button class="btn btn-sm" onclick="addF(1)" style="margin-top:4px">+ Add filter</button>
-        </div>
-        <div>
-          <span class="slbl" style="margin-bottom:4px">File 2 filters</span>
-          <div id="flist2"></div>
-          <button class="btn btn-sm" onclick="addF(2)" style="margin-top:4px">+ Add filter</button>
-        </div>
+      <div>
+        <label>Label</label>
+        <input type="text" id="lbl1" placeholder="e.g. Essbase">
       </div>
     </div>
+  </div>
+
+  <!-- File 2 value config -->
+  <div style="background:#f8f8f8;border-radius:8px;padding:12px">
+    <p style="font-size:12px;font-weight:600;margin-bottom:8px">File 2</p>
+    <div class="grid2" style="margin-bottom:8px">
+      <div>
+        <label>Value source</label>
+        <select id="vsrc2" onchange="toggleValueCol(2)">
+          <option value="pairedcol">Use paired column cell value</option>
+          <option value="col">Pick a specific value column</option>
+        </select>
+      </div>
+      <div id="vcoldiv2" style="display:none">
+        <label>Value column</label>
+        <select id="vcol2"></select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Aggregation (if multiple rows per key)</label>
+        <select id="agg2">
+          <option value="sum">Sum</option>
+          <option value="count">Count rows</option>
+          <option value="avg">Average</option>
+          <option value="min">Min</option>
+          <option value="max">Max</option>
+        </select>
+      </div>
+      <div>
+        <label>Label</label>
+        <input type="text" id="lbl2" placeholder="e.g. GL">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <span class="slbl">Tolerance &amp; filters</span>
+  <div style="margin-bottom:12px">
+    <label>Ignore differences smaller than</label>
+    <input type="number" id="tol" value="0.01" step="0.01" min="0">
+  </div>
+  <div class="grid2">
+    <div>
+      <span class="slbl" style="margin-bottom:4px">File 1 filters</span>
+      <div id="flist1"></div>
+      <button class="btn btn-sm" onclick="addF(1)" style="margin-top:4px">+ Add filter</button>
+    </div>
+    <div>
+      <span class="slbl" style="margin-bottom:4px">File 2 filters</span>
+      <div id="flist2"></div>
+      <button class="btn btn-sm" onclick="addF(2)" style="margin-top:4px">+ Add filter</button>
+    </div>
+  </div>
+</div>
+```
+
   </div>
 
   <div class="actions">
@@ -281,6 +335,34 @@ input:focus, select:focus { outline: none; border-color: #555; }
 
 <div id="step3" class="step">
   <div id="statBar" class="stat-bar"></div>
+
+  <!-- Slicers -->
+
+  <div class="slicer-bar">
+    <div class="slicer-panel">
+      <div class="slicer-header">
+        <span id="rowSlicerTitle">Rows</span>
+        <div class="slicer-header-btns">
+          <button class="btn btn-sm" onclick="slicerAll('row',true)">Select all</button>
+          <button class="btn btn-sm" onclick="slicerAll('row',false)">Clear</button>
+        </div>
+      </div>
+      <input class="slicer-search" type="text" placeholder="Search rows..." oninput="filterSlicerSearch('row',this.value)">
+      <div class="slicer-list" id="rowSlicer"></div>
+    </div>
+    <div class="slicer-panel">
+      <div class="slicer-header">
+        <span>Columns (periods)</span>
+        <div class="slicer-header-btns">
+          <button class="btn btn-sm" onclick="slicerAll('col',true)">Select all</button>
+          <button class="btn btn-sm" onclick="slicerAll('col',false)">Clear</button>
+        </div>
+      </div>
+      <input class="slicer-search" type="text" placeholder="Search columns..." oninput="filterSlicerSearch('col',this.value)">
+      <div class="slicer-list" id="colSlicer"></div>
+    </div>
+  </div>
+
   <div class="toolbar">
     <button class="btn btn-sm active" id="fa" onclick="setView('all',this)">All rows</button>
     <button class="btn btn-sm" id="fb" onclick="setView('breaks',this)">Break rows only</button>
@@ -289,7 +371,7 @@ input:focus, select:focus { outline: none; border-color: #555; }
   <div class="pivot-wrap">
     <table class="pivot-table" id="pivotTable"></table>
   </div>
-  <p style="font-size:11px;color:#888;margin-top:8px">Click any red cell to see source rows behind that number.</p>
+  <p style="font-size:11px;color:#888;margin-top:8px">Click any red cell to see source rows. Use slicers above to show/hide rows and columns.</p>
   <div class="actions">
     <div class="actions-left">
       <button class="btn" onclick="goS(2)">← Edit mapping</button>
@@ -315,6 +397,8 @@ let fcC = {1:0, 2:0};
 let pairC = 0;
 let currentView = 'all';
 let openDrill = null;
+let selectedRows = new Set();   // which row keys are visible
+let selectedCols = new Set();   // which pair labels are visible
 
 // ═══════════════════════════════════════════
 //  FILE LOADING + SHEET SELECTION
@@ -723,7 +807,14 @@ function runRecon() {
   const tol      = parseFloat(document.getElementById('tol').value) || 0.01;
   const lbl1     = document.getElementById('lbl1').value || 'File 1';
   const lbl2     = document.getElementById('lbl2').value || 'File 2';
-  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs};
+  // Value column: null means use the paired column cell directly
+  const vsrc1    = document.getElementById('vsrc1').value;
+  const vsrc2    = document.getElementById('vsrc2').value;
+  const vcol1    = vsrc1==='col' ? document.getElementById('vcol1').value : null;
+  const vcol2    = vsrc2==='col' ? document.getElementById('vcol2').value : null;
+  if (vsrc1==='col' && !vcol1) { alert('Please select a value column for File 1.'); return; }
+  if (vsrc2==='col' && !vcol2) { alert('Please select a value column for File 2.'); return; }
+  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, vcol1, vcol2};
 
   // Tag pairs with their side for buildPivotFromPairs
   const pairs1 = pairs.map(p => ({...p, side:1}));
@@ -733,8 +824,8 @@ function runRecon() {
   const fd2 = applyFs(D[2], getFs(2));
 
   // Build separately per side using the correct column names
-  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1);
-  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2);
+  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1, vcol1);
+  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2, vcol2);
 
   const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])]
     .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
@@ -742,12 +833,17 @@ function runRecon() {
   pivotResult = {p1, p2, allRows, pairs};
   colPairs = pairs;
   currentView = 'all';
+  // Initialise slicers — all selected by default
+  selectedRows = new Set(allRows);
+  selectedCols = new Set(pairs.map(p => p.label));
+  buildSlicers(allRows, pairs);
   renderPivot();
   goS(3);
 }
 
-function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType) {
+function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, valueCol) {
   // colMaps = [{col, label}]
+  // valueCol: if set, use this column for the value instead of the paired column cell
   const cells = {}, counts = {}, src = {};
   const rowKeys = new Set();
 
@@ -758,7 +854,12 @@ function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType) {
     if (!cells[rk]) { cells[rk]={}; counts[rk]={}; src[rk]={}; }
 
     colMaps.forEach(({col, label}) => {
-      const rawVal = row[col];
+      // Determine the value: use explicit valueCol if specified, else paired col cell
+      const rawVal = valueCol ? row[valueCol] : row[col];
+      // When using paired col as value, skip if the paired col isn't in this row
+      // When using valueCol, skip if paired col not in row (row not relevant to this period)
+      if (!valueCol && (rawVal===undefined || rawVal==='')) return;
+      if (valueCol && (row[col]===undefined || row[col]==='')) return;  // paired col acts as filter
       if (rawVal===undefined || rawVal==='') return;
       const v = aggType==='count' ? 1 : toNum(rawVal);
       if (!src[rk][label]) src[rk][label]=[];
@@ -785,6 +886,75 @@ function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType) {
 }
 
 // ═══════════════════════════════════════════
+//  SLICERS
+// ═══════════════════════════════════════════
+function buildSlicers(allRows, pairs) {
+  // Update row slicer title with column name
+  document.getElementById('rowSlicerTitle').textContent =
+    meta.rowCol1 === meta.rowCol2 ? meta.rowCol1 : meta.rowCol1 + ' / ' + meta.rowCol2;
+
+  // Build row slicer
+  const rowEl = document.getElementById('rowSlicer');
+  rowEl.innerHTML = allRows.map(rk => {
+    const chk = selectedRows.has(rk) ? 'checked' : '';
+    return `<label class="slicer-item${chk?'':' unchecked'}" id="sri_${CSS.escape(rk)}">
+      <input type="checkbox" ${chk} onchange="toggleSlicer('row','${rk.replace(/'/g,"\'")}',this.checked)">
+      ${rk}
+    </label>`;
+  }).join('');
+
+  // Build column slicer
+  const colEl = document.getElementById('colSlicer');
+  colEl.innerHTML = pairs.map(p => {
+    const chk = selectedCols.has(p.label) ? 'checked' : '';
+    return `<label class="slicer-item${chk?'':' unchecked'}" id="sci_${CSS.escape(p.label)}">
+      <input type="checkbox" ${chk} onchange="toggleSlicer('col','${p.label.replace(/'/g,"\'")}',this.checked)">
+      ${p.label}
+    </label>`;
+  }).join('');
+}
+
+function toggleSlicer(type, val, checked) {
+  if (type === 'row') {
+    if (checked) selectedRows.add(val); else selectedRows.delete(val);
+    const item = document.getElementById('sri_' + CSS.escape(val));
+    if (item) item.className = 'slicer-item' + (checked ? '' : ' unchecked');
+  } else {
+    if (checked) selectedCols.add(val); else selectedCols.delete(val);
+    const item = document.getElementById('sci_' + CSS.escape(val));
+    if (item) item.className = 'slicer-item' + (checked ? '' : ' unchecked');
+  }
+  renderPivot();
+}
+
+function slicerAll(type, checked) {
+  if (type === 'row') {
+    if (checked) pivotResult.allRows.forEach(r => selectedRows.add(r));
+    else selectedRows.clear();
+    document.querySelectorAll('#rowSlicer .slicer-item').forEach(el => {
+      el.className = 'slicer-item' + (checked ? '' : ' unchecked');
+      el.querySelector('input').checked = checked;
+    });
+  } else {
+    if (checked) meta.pairs.forEach(p => selectedCols.add(p.label));
+    else selectedCols.clear();
+    document.querySelectorAll('#colSlicer .slicer-item').forEach(el => {
+      el.className = 'slicer-item' + (checked ? '' : ' unchecked');
+      el.querySelector('input').checked = checked;
+    });
+  }
+  renderPivot();
+}
+
+function filterSlicerSearch(type, query) {
+  const q = query.toLowerCase();
+  const listId = type==='row' ? 'rowSlicer' : 'colSlicer';
+  document.querySelectorAll('#'+listId+' .slicer-item').forEach(el => {
+    el.style.display = el.textContent.trim().toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════
 //  RENDER PIVOT TABLE
 // ═══════════════════════════════════════════
 function fmt(n) {
@@ -798,18 +968,25 @@ function renderPivot() {
   const {tol, lbl1, lbl2, pairs} = meta;
   let matchCells=0, breakCells=0, missCells=0;
 
+  // Apply slicer filters first, then break filter
+  const slicedRows = allRows.filter(rk => selectedRows.has(rk));
+  const slicedPairs = pairs.filter(p => selectedCols.has(p.label));
+
   const showRows = currentView==='breaks'
-    ? allRows.filter(rk => pairs.some(p => {
+    ? slicedRows.filter(rk => slicedPairs.some(p => {
         const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
         if (v1==null||v2==null) return true;
         return Math.abs(v1-v2) > tol;
       }))
-    : allRows;
+    : slicedRows;
+
+  // Use slicedPairs as the active pairs for rendering
+  const activePairs = slicedPairs;
 
   // ── Header row 1: row key | [pair label colspan=3] | Total colspan=3
   let html = '<thead><tr>';
   html += `<th class="row-hdr" rowspan="2">${meta.rowCol1===meta.rowCol2?meta.rowCol1:meta.rowCol1+' / '+meta.rowCol2}</th>`;
-  pairs.forEach(p => {
+  activePairs.forEach(p => {
     html += `<th colspan="3" style="text-align:center;border-left:2px solid #ddd">${p.label}</th>`;
   });
   html += `<th colspan="3" class="col-total" style="text-align:center">Total</th>`;
@@ -817,17 +994,17 @@ function renderPivot() {
 
   // ── Header row 2: F1 | F2 | Diff per pair
   html += '<tr>';
-  pairs.forEach(() => {
+  activePairs.forEach(() => {
     html += `<th style="border-left:2px solid #ddd">${lbl1}</th><th>${lbl2}</th><th>Diff</th>`;
   });
   html += `<th class="col-total">${lbl1}</th><th class="col-total">${lbl2}</th><th class="col-total">Diff</th>`;
   html += '</tr></thead><tbody>';
 
-  const totalCols = pairs.length * 3 + 4;
+  const totalCols = activePairs.length * 3 + 4;
 
   showRows.forEach((rk, ri) => {
     let tot1=0, tot2=0;
-    pairs.forEach(p => {
+    activePairs.forEach(p => {
       const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
       if (v1!=null) tot1+=v1;
       if (v2!=null) tot2+=v2;
@@ -837,7 +1014,7 @@ function renderPivot() {
     html += `<tr id="pr_${ri}">`;
     html += `<td class="row-key">${rk}</td>`;
 
-    pairs.forEach(p => {
+    activePairs.forEach(p => {
       const v1=p1.cells[rk]?.[p.label]??null;
       const v2=p2.cells[rk]?.[p.label]??null;
       let diffCls='', diffTxt='';

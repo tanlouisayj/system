@@ -89,6 +89,14 @@ select:focus,input:focus{outline:none;border-color:#555}
 .prev-box td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 .prev-box tr:last-child td{border-bottom:none}
 .footer{text-align:center;padding:1.5rem;font-size:11px;color:#aaa}
+.vmap-block{border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.vmap-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8f8f8;border-bottom:1px solid #e0e0e0;gap:8px;flex-wrap:wrap}
+.vmap-colrow{display:grid;grid-template-columns:1fr 28px 1fr 80px;gap:6px;align-items:center}
+.vmap-table{width:100%;border-collapse:collapse;font-size:12px}
+.vmap-table th{padding:5px 10px;background:#f8f8f8;border-bottom:1px solid #e0e0e0;font-size:11px;color:#666;font-weight:600;text-align:left}
+.vmap-table td{padding:4px 8px;border-bottom:1px solid #f5f5f5}
+.vmap-table tr:last-child td{border-bottom:none}
+.vmap-table select{font-size:11px;padding:3px 6px}
 </style>
 </head>
 <body>
@@ -105,7 +113,7 @@ select:focus,input:focus{outline:none;border-color:#555}
     <span class="slbl">Step 1 — Upload files &amp; select sheets</span>
     <div class="grid2" style="margin-top:8px">
       <div>
-        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span id="fileLabel1">File 1</span> — Source</label>
+        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span class="sname-1">File 1</span> — Source</label>
         <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()" ondragover="evDrag(event,'zone1')" ondragleave="evLeave('zone1')" ondrop="evDrop(event,1)">
           <input type="file" id="f1" accept=".xlsx,.xls,.csv" onchange="loadFile(1,this)">
           <p style="font-size:13px;color:#666" id="z1t">Click or drag file here</p>
@@ -118,7 +126,7 @@ select:focus,input:focus{outline:none;border-color:#555}
         </div>
       </div>
       <div>
-        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span id="fileLabel2">File 2</span> — Comparison</label>
+        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span class="sname-2">File 2</span> — Comparison</label>
         <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()" ondragover="evDrag(event,'zone2')" ondragleave="evLeave('zone2')" ondrop="evDrop(event,2)">
           <input type="file" id="f2" accept=".xlsx,.xls,.csv" onchange="loadFile(2,this)">
           <p style="font-size:13px;color:#666" id="z2t">Click or drag file here</p>
@@ -167,7 +175,7 @@ select:focus,input:focus{outline:none;border-color:#555}
     <span class="slbl">Columns — what spreads across as column headers (e.g. Jan-26, Feb-26)</span>
     <div class="grid2" style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
       <div>
-        <label style="font-weight:600;color:#444;margin-bottom:5px">File 1 — periods stored as</label>
+        <label style="font-weight:600;color:#444;margin-bottom:5px"><span class="sname-1">File 1</span> — periods stored as</label>
         <select id="f1src" onchange="updateSrc()">
           <option value="header">Column headers (e.g. Jan-26 | Feb-26 as column names)</option>
           <option value="values">Values in a column (a Period column with 202601, 202602…)</option>
@@ -178,7 +186,7 @@ select:focus,input:focus{outline:none;border-color:#555}
         </div>
       </div>
       <div>
-        <label style="font-weight:600;color:#444;margin-bottom:5px">File 2 — periods stored as</label>
+        <label style="font-weight:600;color:#444;margin-bottom:5px"><span class="sname-2">File 2</span> — periods stored as</label>
         <select id="f2src" onchange="updateSrc()">
           <option value="header">Column headers</option>
           <option value="values">Values in a column</option>
@@ -227,11 +235,24 @@ select:focus,input:focus{outline:none;border-color:#555}
     </div>
   </div>
 
+  <!-- VALUE MAPPING -->
+
+  <div class="card" id="vmapCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div>
+        <span class="slbl" style="margin-bottom:2px">Column value mapping <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional)</span></span>
+        <p style="font-size:11px;color:#888">Map values that mean the same thing across files — e.g. "Actual" = "ACT", "Jan-26" = "202601".</p>
+      </div>
+      <button class="btn btn-sm" onclick="addVmap()">+ Add column mapping</button>
+    </div>
+    <div id="vmapList"></div>
+  </div>
+
   <!-- VALUES -->
 
   <div class="grid2">
     <div class="card">
-      <span class="slbl" id="valTitle1">Values — File 1</span>
+      <span class="slbl">Values — <span class="sname-1">File 1</span></span>
       <div style="margin-bottom:8px">
         <label>Amount column <span id="amt1hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
         <select id="amt1"></select>
@@ -252,7 +273,7 @@ select:focus,input:focus{outline:none;border-color:#555}
       </div>
     </div>
     <div class="card">
-      <span class="slbl" id="valTitle2">Values — File 2</span>
+      <span class="slbl" >Values — <span class="sname-2">File 2</span></span>
       <div style="margin-bottom:8px">
         <label>Amount column <span id="amt2hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
         <select id="amt2"></select>
@@ -283,12 +304,12 @@ select:focus,input:focus{outline:none;border-color:#555}
         <input type="number" id="tol" value="0.01" step="0.01" min="0">
       </div>
       <div>
-        <label>File 1 row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
+        <label><span class="sname-1">File 1</span> row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
         <div id="flist1"></div>
         <button class="btn btn-sm" onclick="addRowFilter(1)" style="margin-top:4px">+ Filter</button>
       </div>
       <div>
-        <label>File 2 row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
+        <label><span class="sname-2">File 2</span> row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
         <div id="flist2"></div>
         <button class="btn btn-sm" onclick="addRowFilter(2)" style="margin-top:4px">+ Filter</button>
       </div>
@@ -426,18 +447,22 @@ function pickSheet(n,name,btn) {
   loadSheet(n,name,null);
 }
 
+var SNAME={1:'File 1',2:'File 2'}; // sheet names, updated on load
+
 function loadSheet(n,name,fileName) {
   var data=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
   D[n]=data; D[n]._sheet=name;
+  SNAME[n]=name;
   var nc=Object.keys(data[0]||{}).length;
   document.getElementById('z'+n+'t').textContent=(fileName?fileName+' — ':'')+name;
   document.getElementById('si'+n).textContent='✓ "'+name+'" — '+data.length+' rows, '+nc+' columns';
-  // Update File 1/2 labels throughout UI to sheet name
-  var vt=document.getElementById('valTitle'+n);
-  if(vt) vt.textContent='Values — '+name;
-  var fl=document.getElementById('fileLabel'+n);
-  if(fl) fl.textContent=name;
+  updateSheetLabels(n,name);
   checkReady();
+}
+
+function updateSheetLabels(n,name) {
+  // Update every element with class sname-n to the sheet name
+  document.querySelectorAll('.sname-'+n).forEach(function(el){el.textContent=name;});
 }
 
 function checkReady(){document.getElementById('s1btn').disabled=!(D[1].length&&D[2].length);}
@@ -462,9 +487,19 @@ function fillSel(id,n,sel) {
 
 function getPairOpts(n) {
   var src=document.getElementById('f'+n+'src').value;
-  if (src==='header') return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
+  // Wide/header format: options are column names from the file
+  if (src==='header') {
+    return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
+  }
+  // Long/values format: options are unique period values from the period column
   var pcol=document.getElementById('f'+n+'pcol').value;
-  if (!pcol) return '<option value="">— pick period column first —</option>';
+  if (!pcol) {
+    // Period column not set yet — fall back to showing all column names
+    // so the dropdown is still interactive (user can pick manually)
+    return '<optgroup label="Period column not set — showing all columns">'
+      +getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('')
+      +'</optgroup>';
+  }
   var norm=document.getElementById('colnorm').value;
   var seen=[];
   D[n].forEach(function(r){var v=String(r[pcol]||'').trim();if(v&&seen.indexOf(v)<0)seen.push(v);});
@@ -473,6 +508,7 @@ function getPairOpts(n) {
     if(da&&db) return dtSort(da)-dtSort(db);
     return a.localeCompare(b,undefined,{numeric:true});
   });
+  if(!seen.length) return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
   return seen.map(function(v){return '<option>'+v+'</option>';}).join('');
 }
 
@@ -542,9 +578,9 @@ function initConfig() {
   if(vg1){document.getElementById('vfcol1').value=vg1;updateVFVals(1);}
   if(vg2){document.getElementById('vfcol2').value=vg2;updateVFVals(2);}
 
-  // Sheet name labels
-  if(D[1]._sheet&&!document.getElementById('lbl1').value) document.getElementById('lbl1').value=D[1]._sheet;
-  if(D[2]._sheet&&!document.getElementById('lbl2').value) document.getElementById('lbl2').value=D[2]._sheet;
+  // Pre-fill labels from sheet names
+  if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
+  if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
 
   // Auto-detect format per file
   [1,2].forEach(function(n){
@@ -563,7 +599,8 @@ function initConfig() {
   document.getElementById('flist2').innerHTML='';
   document.getElementById('vflist1').innerHTML='';
   document.getElementById('vflist2').innerHTML='';
-  fcC={1:0,2:0}; vfC={1:0,2:0};
+  document.getElementById('vmapList').innerHTML='';
+  fcC={1:0,2:0}; vfC={1:0,2:0}; vmapC=0;
 
   // Auto-suggest if no pairs yet
   if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
@@ -781,6 +818,112 @@ function applyFilters(data,filters){
   });
 }
 
+// ── VALUE MAPPING ──
+var vmapC = 0;
+
+function addVmap() {
+  var id = 'vm_' + (++vmapC);
+  var c1 = getCols(1), c2 = getCols(2);
+  var d = document.createElement('div');
+  d.className = 'vmap-block'; d.id = id;
+
+  // Header
+  var hdr = document.createElement('div'); hdr.className = 'vmap-header';
+  var colRow = document.createElement('div'); colRow.className = 'vmap-colrow'; colRow.style.flex = '1';
+  var s1 = document.createElement('select'); s1.className = 'vmc1';
+  s1.innerHTML = c1.map(function(c){return '<option>'+c+'</option>';}).join('');
+  s1.onchange = function(){buildVmapRows(id);};
+  var arrow = document.createElement('span'); arrow.textContent = '↔'; arrow.style.cssText = 'text-align:center;color:#ccc;font-size:16px';
+  var s2 = document.createElement('select'); s2.className = 'vmc2';
+  s2.innerHTML = c2.map(function(c){return '<option>'+c+'</option>';}).join('');
+  s2.onchange = function(){buildVmapRows(id);};
+  var hint = document.createElement('span'); hint.textContent = 'value pairs'; hint.style.cssText = 'font-size:11px;color:#888';
+  colRow.appendChild(s1); colRow.appendChild(arrow); colRow.appendChild(s2); colRow.appendChild(hint);
+  var rmBtn = document.createElement('button'); rmBtn.className = 'rm-btn'; rmBtn.textContent = '×';
+  rmBtn.onclick = function(){document.getElementById(id).remove();};
+  hdr.appendChild(colRow); hdr.appendChild(rmBtn);
+
+  // Rows container
+  var rowsDiv = document.createElement('div'); rowsDiv.className = 'vmap-rows'; rowsDiv.style.cssText = 'padding:8px 12px';
+  rowsDiv.innerHTML = '<p style="font-size:11px;color:#aaa">Select columns above to map values.</p>';
+
+  d.appendChild(hdr); d.appendChild(rowsDiv);
+  document.getElementById('vmapList').appendChild(d);
+
+  // Auto-guess columns
+  var g1 = c1.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c1[0];
+  var g2 = c2.find(function(c){return c.toLowerCase()===g1.toLowerCase();})||
+    c2.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c2[0];
+  s1.value = g1; s2.value = g2;
+  buildVmapRows(id);
+}
+
+function buildVmapRows(id) {
+  var block = document.getElementById(id); if(!block) return;
+  var c1 = block.querySelector('.vmc1').value;
+  var c2 = block.querySelector('.vmc2').value;
+  if(!c1||!c2) return;
+  // Get unique values from each column
+  var vals1 = []; D[1].forEach(function(r){var v=String(r[c1]||'').trim();if(v&&vals1.indexOf(v)<0)vals1.push(v);});
+  var vals2 = []; D[2].forEach(function(r){var v=String(r[c2]||'').trim();if(v&&vals2.indexOf(v)<0)vals2.push(v);});
+  vals1.sort(); vals2.sort();
+  var v2opts = '<option value="">— same as F1 —</option>'+vals2.map(function(v){return '<option>'+v+'</option>';}).join('');
+  var n1 = SNAME[1], n2 = SNAME[2];
+  var html = '<table class="vmap-table"><thead><tr>'
+    + '<th>'+n1+' value ('+c1+')</th>'
+    + '<th>→</th>'
+    + '<th>'+n2+' equivalent ('+c2+')</th>'
+    + '</tr></thead><tbody>';
+  vals1.forEach(function(v){
+    // Auto-match: same value, or date-normalised equivalent
+    var autoMatch = '';
+    var pd1 = parseDt(v);
+    if(pd1) {
+      vals2.forEach(function(v2){var pd2=parseDt(v2);if(pd2&&pd2.m===pd1.m&&pd2.y===pd1.y)autoMatch=v2;});
+    } else {
+      if(vals2.indexOf(v)>=0) autoMatch=v;
+    }
+    var selOpts = '<option value="">— same as F1 —</option>'
+      +vals2.map(function(v2){return '<option'+(v2===autoMatch?' selected':'')+'>'+v2+'</option>';}).join('');
+    html += '<tr><td style="font-weight:500">'+v+'</td><td style="color:#ccc;text-align:center">→</td>'
+      +'<td><select class="vmr" data-f1="'+v+'">'+selOpts+'</select></td></tr>';
+  });
+  html += '</tbody></table>';
+  block.querySelector('.vmap-rows').innerHTML = html;
+}
+
+function getVmaps() {
+  // Returns array of {f1col, f2col, map: {f1val: f2val}}
+  return Array.from(document.querySelectorAll('.vmap-block')).map(function(block){
+    var f1col = block.querySelector('.vmc1').value;
+    var f2col = block.querySelector('.vmc2').value;
+    var map = {};
+    block.querySelectorAll('.vmr').forEach(function(sel){
+      if(sel.value) map[sel.dataset.f1] = sel.value;
+    });
+    return {f1col:f1col, f2col:f2col, map:map};
+  }).filter(function(vm){return vm.f1col && vm.f2col;});
+}
+
+function applyVmaps(data, vmaps, side) {
+  // side=1 or side=2: apply mapping to convert File 2 values to File 1 equivalents
+  if(!vmaps.length) return data;
+  return data.map(function(row){
+    var r = Object.assign({}, row);
+    vmaps.forEach(function(vm){
+      var col = side===1 ? vm.f1col : vm.f2col;
+      if(side===2 && col && vm.map) {
+        var curVal = String(r[col]||'').trim();
+        // Build reverse map: f2val → f1val
+        var revMap = {};
+        Object.keys(vm.map).forEach(function(f1v){revMap[vm.map[f1v]]=f1v;});
+        if(revMap[curVal]) r[col] = revMap[curVal]; // normalise F2 value to F1 equivalent
+      }
+    });
+    return r;
+  });
+}
+
 // ── NORMALISE ──
 function normKey(val,type){
   var s=String(val||'').trim();
@@ -893,7 +1036,10 @@ function runRecon() {
 
   // Apply value filters before building pivot
   var vfFilters1=getVFs(1), vfFilters2=getVFs(2);
-  var ffd1=applyVFs(fd1,vfFilters1), ffd2=applyVFs(fd2,vfFilters2);
+  var fvd1=applyVFs(fd1,vfFilters1), fvd2=applyVFs(fd2,vfFilters2);
+  // Apply column value mappings (normalise File 2 values to File 1 equivalents)
+  var vmaps=getVmaps();
+  var ffd1=applyVmaps(fvd1,vmaps,1), ffd2=applyVmaps(fvd2,vmaps,2);
   var p1=buildSide(ffd1,rowCol1,rowNorm,p1pairs,agg1,si.f1src,si.f1pcol,si.f1vcol||amt1,'','',colNorm);
   var p2=buildSide(ffd2,rowCol2,rowNorm,p2pairs,agg2,si.f2src,si.f2pcol,si.f2vcol||amt2,'','',colNorm);
 
@@ -1123,8 +1269,11 @@ function resetAll(){
   document.getElementById('s1btn').disabled=true;
   document.getElementById('pairList').innerHTML='';
   document.getElementById('lbl1').value='';document.getElementById('lbl2').value='';
-  ['vflist1','vflist2','flist1','flist2'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
-  vfC={1:0,2:0};
+  SNAME={1:'File 1',2:'File 2'};
+  document.querySelectorAll('.sname-1').forEach(function(el){el.textContent='File 1';});
+  document.querySelectorAll('.sname-2').forEach(function(el){el.textContent='File 2';});
+  ['vflist1','vflist2','flist1','flist2','vmapList'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  vfC={1:0,2:0}; vmapC=0;
   [1,2].forEach(function(n){
     document.getElementById('zone'+n).classList.remove('loaded');
     document.getElementById('z'+n+'t').textContent='Click or drag file here';

@@ -230,6 +230,14 @@ select:focus,input:focus{outline:none;border-color:#555}
   <tbody id="pairList"></tbody>
 </table>
 <p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
+<div id="pairPreview" style="display:none;margin-top:10px;padding:10px;background:#f8f8f8;border-radius:7px;border:1px solid #e0e0e0">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
+    <button class="btn btn-sm" onclick="document.getElementById('pairPreview').style.display='none'">×</button>
+  </div>
+  <div id="pairPreviewContent" style="font-size:12px;color:#555;overflow-x:auto"></div>
+</div>
+<button class="btn btn-sm" onclick="previewPairs()" style="margin-top:8px">🔍 Preview data match</button>
 ```
 
   </div>
@@ -535,6 +543,17 @@ function populateConfig() {
   if (sn1&&!document.getElementById('lbl1').value) document.getElementById('lbl1').value=sn1;
   if (sn2&&!document.getElementById('lbl2').value) document.getElementById('lbl2').value=sn2;
 
+  // Auto-detect format per file
+  [1,2].forEach(n => {
+    const cx = n===1?c1:c2;
+    const dateCols = cx.filter(c => parseDate(c) !== null);
+    const hasPeriodCol = cx.some(c => /period|month|mth|yyyymm|mmyyyy/i.test(c));
+    const hasAmtCol   = cx.some(c => /amount|amt|value|balance|lcy|fcy|bal/i.test(c));
+    // Wide: 2+ date-like column headers. Long: period + amount columns, few date headers
+    const guessLong = dateCols.length < 2 && hasPeriodCol && hasAmtCol;
+    document.getElementById('f'+n+'src').value = guessLong ? 'values' : 'header';
+  });
+
   // Init f1src/f2src UI
   updatePairSource();
 
@@ -837,9 +856,121 @@ function aggInto(cells,counts,lbl,v,t) {
 // ═══════════════════════════════════════════════════════════
 //  RUN RECON
 // ═══════════════════════════════════════════════════════════
+function previewPairs() {
+  const pairs = getPairs();
+  const si = getSrcInfo();
+  const colNorm = document.getElementById('colnorm').value;
+  const rowNorm = document.getElementById('rownorm').value;
+  const rowCol1 = document.getElementById('row1').value;
+  const rowCol2 = document.getElementById('row2').value;
+  const vfcol1 = document.getElementById('vfcol1').value;
+  const vfval1 = document.getElementById('vfval1').value;
+  const vfcol2 = document.getElementById('vfcol2').value;
+  const vfval2 = document.getElementById('vfval2').value;
+
+  const fd1 = applyFs(D[1], getFs(1));
+  const fd2 = applyFs(D[2], getFs(2));
+  const ffd1 = (vfcol1&&vfval1) ? fd1.filter(r=>String(r[vfcol1]||'').trim()===vfval1) : fd1;
+  const ffd2 = (vfcol2&&vfval2) ? fd2.filter(r=>String(r[vfcol2]||'').trim()===vfval2) : fd2;
+
+  const rows = ['<table style="width:100%;border-collapse:collapse">',
+    '<thead><tr>',
+    '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">Pair label</th>',
+    '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">File 1 column</th>',
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">F1 rows found</th>',
+    '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">File 2 column</th>',
+    '<th style="text-align:right;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">F2 rows found</th>',
+    '<th style="text-align:center;padding:4px 8px;border-bottom:1px solid #ddd;font-size:11px">Status</th>',
+    '</tr></thead><tbody>'];
+
+  pairs.forEach(p => {
+    let count1=0, count2=0, f1exists=false, f2exists=false;
+
+    if (si.f1src==='header') {
+      const colExists = ffd1.length>0 && p.f1col in (ffd1[0]||{});
+      f1exists = colExists;
+      count1 = ffd1.filter(r => String(r[rowCol1]||'').trim()!=='' && r[p.f1col]!==undefined && r[p.f1col]!=='').length;
+    } else {
+      const pcol = si.f1pcol;
+      if (pcol) {
+        const nv = p.normVal;
+        count1 = ffd1.filter(r => {
+          const rv = String(r[pcol]||'').trim();
+          return normPeriod(rv,colNorm)===nv || rv.toLowerCase()===nv.toLowerCase();
+        }).length;
+        f1exists = count1>0;
+      }
+    }
+
+    if (si.f2src==='header') {
+      const colExists = ffd2.length>0 && p.f2col in (ffd2[0]||{});
+      f2exists = colExists;
+      count2 = ffd2.filter(r => String(r[rowCol2]||'').trim()!=='' && r[p.f2col]!==undefined && r[p.f2col]!=='').length;
+    } else {
+      const pcol = si.f2pcol;
+      if (pcol) {
+        const nv = p.normVal;
+        count2 = ffd2.filter(r => {
+          const rv = String(r[pcol]||'').trim();
+          return normPeriod(rv,colNorm)===nv || rv.toLowerCase()===nv.toLowerCase();
+        }).length;
+        f2exists = count2>0;
+      }
+    }
+
+    const ok = count1>0 && count2>0;
+    const warn = count1===0||count2===0;
+    const statusIcon = ok ? '✓' : (warn ? '⚠' : '✗');
+    const statusColor = ok ? '#2d7a4f' : (warn ? '#b7770d' : '#c0392b');
+    const f1warn = count1===0 ? ' style="color:#c0392b"' : '';
+    const f2warn = count2===0 ? ' style="color:#c0392b"' : '';
+
+    rows.push(`<tr>
+      <td style="padding:4px 8px;font-weight:500">${p.label}</td>
+      <td style="padding:4px 8px;font-family:monospace;font-size:11px">${p.f1col}</td>
+      <td style="padding:4px 8px;text-align:right"${f1warn}>${count1} rows</td>
+      <td style="padding:4px 8px;font-family:monospace;font-size:11px">${p.f2col}</td>
+      <td style="padding:4px 8px;text-align:right"${f2warn}>${count2} rows</td>
+      <td style="padding:4px 8px;text-align:center;color:${statusColor};font-weight:600">${statusIcon}</td>
+    </tr>`);
+  });
+
+  rows.push('</tbody></table>');
+  const issues = pairs.filter(p => {
+    // Check if File 2 column exists
+    if (si.f2src==='header' && ffd2.length>0 && !(p.f2col in (ffd2[0]||{}))) return true;
+    return false;
+  });
+  if (issues.length>0) {
+    rows.push(`<p style="margin-top:8px;color:#b7770d;font-size:12px">⚠ ${issues.length} pair(s) have File 2 column not found. 
+      Check that File 2 format is set correctly — if periods are <em>values</em> in a column (not column headers), 
+      switch File 2 to "Values in a column" and set the Period and Amount columns.</p>`);
+  }
+
+  document.getElementById('pairPreviewContent').innerHTML = rows.join('');
+  document.getElementById('pairPreview').style.display = '';
+}
+
 function runRecon() {
   const pairs=getPairs();
   if(!pairs.length){alert('Add at least one column pair.');return;}
+  // Quick validation: check File 2 columns exist (for header mode)
+  const si_check=getSrcInfo();
+  const fd2_check=applyFs(D[2],getFs(2));
+  if(si_check.f2src==='header' && fd2_check.length>0) {
+    const f2cols=Object.keys(fd2_check[0]||{});
+    const missing=pairs.filter(p=>!f2cols.includes(p.f2col));
+    if(missing.length>0) {
+      const names=missing.map(p=>p.f2col).join(', ');
+      const go=confirm(
+        missing.length+' File 2 column(s) not found in data: '+names+'\n\n'+
+        'This usually means File 2 stores periods as VALUES in a column (long format), not as column headers.\n\n'+
+        'Try switching File 2 to "Values in a column" and setting the Period and Amount columns.\n\n'+
+        'Click OK to run anyway, or Cancel to go back and fix.'
+      );
+      if(!go) return;
+    }
+  }
 
   const rowCol1=document.getElementById('row1').value;
   const rowCol2=document.getElementById('row2').value;

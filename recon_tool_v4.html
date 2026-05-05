@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -263,7 +263,7 @@ input:focus, select:focus { outline: none; border-color: #555; }
         </div>
       </div>
     </div>
-    <div class="grid2">
+    <div class="grid2" style="margin-bottom:8px">
       <div>
         <label>Aggregation</label>
         <select id="agg1">
@@ -279,17 +279,19 @@ input:focus, select:focus { outline: none; border-color: #555; }
         <input type="text" id="lbl1" placeholder="e.g. Essbase">
       </div>
     </div>
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8">
-      <label style="font-weight:500;margin-bottom:6px">Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD)</span></label>
-      <div style="display:grid;grid-template-columns:1fr 60px 1fr 30px;gap:6px;align-items:center">
+    <div style="padding-top:8px;border-top:1px solid #e8e8e8">
+      <label style="font-weight:500;font-size:12px;display:block;margin-bottom:6px">
+        Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD, Basis = Actual)</span>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 40px 1fr 30px;gap:6px;align-items:center">
         <select id="vfcol1" onchange="updateVFValues(1)" style="font-size:12px">
           <option value="">-- no filter --</option>
         </select>
-        <span style="text-align:center;font-size:12px;color:#888">=</span>
+        <span style="text-align:center;font-size:12px;color:#888;padding-top:2px">=</span>
         <select id="vfval1" style="font-size:12px">
           <option value="">-- select value --</option>
         </select>
-        <button class="rm-btn" onclick="clearVF(1)" title="Clear filter">×</button>
+        <button class="rm-btn" onclick="clearVF(1)" title="Clear">×</button>
       </div>
     </div>
   </div>
@@ -321,7 +323,7 @@ input:focus, select:focus { outline: none; border-color: #555; }
         </div>
       </div>
     </div>
-    <div class="grid2">
+    <div class="grid2" style="margin-bottom:8px">
       <div>
         <label>Aggregation</label>
         <select id="agg2">
@@ -337,17 +339,19 @@ input:focus, select:focus { outline: none; border-color: #555; }
         <input type="text" id="lbl2" placeholder="e.g. GL">
       </div>
     </div>
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8">
-      <label style="font-weight:500;margin-bottom:6px">Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD)</span></label>
-      <div style="display:grid;grid-template-columns:1fr 60px 1fr 30px;gap:6px;align-items:center">
+    <div style="padding-top:8px;border-top:1px solid #e8e8e8">
+      <label style="font-weight:500;font-size:12px;display:block;margin-bottom:6px">
+        Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD, Basis = Actual)</span>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 40px 1fr 30px;gap:6px;align-items:center">
         <select id="vfcol2" onchange="updateVFValues(2)" style="font-size:12px">
           <option value="">-- no filter --</option>
         </select>
-        <span style="text-align:center;font-size:12px;color:#888">=</span>
+        <span style="text-align:center;font-size:12px;color:#888;padding-top:2px">=</span>
         <select id="vfval2" style="font-size:12px">
           <option value="">-- select value --</option>
         </select>
-        <button class="rm-btn" onclick="clearVF(2)" title="Clear filter">×</button>
+        <button class="rm-btn" onclick="clearVF(2)" title="Clear">×</button>
       </div>
     </div>
   </div>
@@ -697,19 +701,57 @@ function clearVF(n) {
 function populateConfig() {
   const c1 = cols(1), c2 = cols(2);
 
-  // Row key — guess LCIN-like column
+  // ── Row key ──
   const guessKey1 = c1.find(c => /lcin|code|id|centre|center|cc|entity|acct/i.test(c)) || c1[0];
-  const guessKey2 = c2.find(c => /lcin|code|id|centre|center|cc|entity|acct/i.test(c)) ||
-    c2.find(c => c.toLowerCase() === guessKey1.toLowerCase()) || c2[0];
+  const guessKey2 = c2.find(c => c.toLowerCase() === guessKey1.toLowerCase()) ||
+    c2.find(c => /lcin|code|id|centre|center|cc|entity|acct/i.test(c)) || c2[0];
   fillSel('row1', 1, guessKey1);
   fillSel('row2', 2, guessKey2);
 
-  // Clear filters
+  // ── Per-file config ──
+  [1, 2].forEach(n => {
+    const cx = n === 1 ? c1 : c2;
+    const blank = '<option value="">-- select --</option>';
+    const allOpts = blank + cx.map(c => `<option>${c}</option>`).join('');
+
+    // Populate period + value column selects (for long format)
+    document.getElementById('pcol' + n).innerHTML = allOpts;
+    document.getElementById('vcol' + n).innerHTML = allOpts;
+
+    // Auto-detect format: wide if date-like column headers exist, else long
+    const dateCols   = cx.filter(c => parseDate(c) !== null);
+    const hasPeriod  = cx.some(c => /period|month|mth|yyyymm|mmyyyy/i.test(c));
+    const hasAmount  = cx.some(c => /amount|amt|value|balance|lcy|fcy|bal/i.test(c));
+    const guessLong  = dateCols.length < 2 && hasPeriod && hasAmount;
+    document.getElementById('fmt' + n).value = guessLong ? 'long' : 'wide';
+    toggleFormat(n);
+
+    // Auto-guess period and value columns
+    const periodGuess = cx.find(c => /period|month|mth|yyyymm|mmyyyy/i.test(c)) ||
+                        cx.find(c => parseDate(String(D[n][0]?.[c] || '')) !== null);
+    const amtGuess    = cx.find(c => /amount|amt|value|balance|lcy|fcy|bal/i.test(c));
+    if (periodGuess) document.getElementById('pcol' + n).value = periodGuess;
+    if (amtGuess)    document.getElementById('vcol' + n).value = amtGuess;
+
+    // ── Value filter column dropdown ──
+    const vfOpts = '<option value="">-- no filter --</option>' +
+      cx.map(c => `<option>${c}</option>`).join('');
+    document.getElementById('vfcol' + n).innerHTML = vfOpts;
+
+    // Auto-guess value filter column (type/measure/scenario-like)
+    const vfGuess = cx.find(c => /datatype|data.?type|type|measure|basis|scenario|version|mtd|ytd|mode/i.test(c));
+    if (vfGuess) {
+      document.getElementById('vfcol' + n).value = vfGuess;
+      updateVFValues(n);   // populate the value dropdown immediately
+    }
+  });
+
+  // ── Clear row filters ──
   document.getElementById('flist1').innerHTML = '';
   document.getElementById('flist2').innerHTML = '';
   fcC = {1:0, 2:0};
 
-  // Auto-suggest pairs if pairList is empty
+  // ── Auto-suggest column pairs if none set yet ──
   if (document.querySelectorAll('#pairList tr').length === 0) {
     autoSuggestPairs();
   }

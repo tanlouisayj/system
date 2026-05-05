@@ -236,23 +236,36 @@ input:focus, select:focus { outline: none; border-color: #555; }
 ```
   <!-- File 1 value config -->
   <div style="background:#f8f8f8;border-radius:8px;padding:12px;margin-bottom:10px">
-    <p style="font-size:12px;font-weight:600;margin-bottom:8px">File 1</p>
-    <div class="grid2" style="margin-bottom:8px">
-      <div>
-        <label>Value source</label>
-        <select id="vsrc1" onchange="toggleValueCol(1)">
-          <option value="pairedcol">Use paired column cell value</option>
-          <option value="col">Pick a specific value column</option>
-        </select>
-      </div>
-      <div id="vcoldiv1" style="display:none">
-        <label>Value column</label>
-        <select id="vcol1"></select>
+    <p style="font-size:12px;font-weight:600;margin-bottom:6px">File 1</p>
+    <div style="margin-bottom:8px">
+      <label>Data format</label>
+      <select id="fmt1" onchange="toggleFormat(1)" style="font-size:13px">
+        <option value="wide">Wide — periods are column headers (e.g. Essbase: Jan-26 | Feb-26)</option>
+        <option value="long">Long — periods are row values (e.g. GL: Period column + Amount column)</option>
+      </select>
+    </div>
+    <!-- Wide: no extra config needed, paired column IS the value -->
+    <div id="wide_hint1" style="font-size:12px;color:#888;margin-bottom:8px">
+      The value in each paired column cell is used directly (e.g. the number under Jan-26).
+    </div>
+    <!-- Long format: period column + value column -->
+    <div id="long_cfg1" style="display:none;margin-bottom:8px">
+      <div class="grid2">
+        <div>
+          <label>Period column <span style="color:#c0392b">*</span></label>
+          <select id="pcol1"></select>
+          <p style="font-size:11px;color:#888;margin-top:3px">The column that holds period values (e.g. Period, Month, YYYYMM)</p>
+        </div>
+        <div>
+          <label>Value column <span style="color:#c0392b">*</span></label>
+          <select id="vcol1"></select>
+          <p style="font-size:11px;color:#888;margin-top:3px">The column that holds the amounts (e.g. Amount, LCY_Amt)</p>
+        </div>
       </div>
     </div>
     <div class="grid2">
       <div>
-        <label>Aggregation (if multiple rows per key)</label>
+        <label>Aggregation</label>
         <select id="agg1">
           <option value="sum">Sum</option>
           <option value="count">Count rows</option>
@@ -270,23 +283,34 @@ input:focus, select:focus { outline: none; border-color: #555; }
 
   <!-- File 2 value config -->
   <div style="background:#f8f8f8;border-radius:8px;padding:12px">
-    <p style="font-size:12px;font-weight:600;margin-bottom:8px">File 2</p>
-    <div class="grid2" style="margin-bottom:8px">
-      <div>
-        <label>Value source</label>
-        <select id="vsrc2" onchange="toggleValueCol(2)">
-          <option value="pairedcol">Use paired column cell value</option>
-          <option value="col">Pick a specific value column</option>
-        </select>
-      </div>
-      <div id="vcoldiv2" style="display:none">
-        <label>Value column</label>
-        <select id="vcol2"></select>
+    <p style="font-size:12px;font-weight:600;margin-bottom:6px">File 2</p>
+    <div style="margin-bottom:8px">
+      <label>Data format</label>
+      <select id="fmt2" onchange="toggleFormat(2)" style="font-size:13px">
+        <option value="wide">Wide — periods are column headers (e.g. Essbase: Jan-26 | Feb-26)</option>
+        <option value="long">Long — periods are row values (e.g. GL: Period column + Amount column)</option>
+      </select>
+    </div>
+    <div id="wide_hint2" style="font-size:12px;color:#888;margin-bottom:8px">
+      The value in each paired column cell is used directly (e.g. the number under Jan-26).
+    </div>
+    <div id="long_cfg2" style="display:none;margin-bottom:8px">
+      <div class="grid2">
+        <div>
+          <label>Period column <span style="color:#c0392b">*</span></label>
+          <select id="pcol2"></select>
+          <p style="font-size:11px;color:#888;margin-top:3px">The column that holds period values (e.g. Period, Month, YYYYMM)</p>
+        </div>
+        <div>
+          <label>Value column <span style="color:#c0392b">*</span></label>
+          <select id="vcol2"></select>
+          <p style="font-size:11px;color:#888;margin-top:3px">The column that holds the amounts (e.g. Amount, LCY_Amt)</p>
+        </div>
       </div>
     </div>
     <div class="grid2">
       <div>
-        <label>Aggregation (if multiple rows per key)</label>
+        <label>Aggregation</label>
         <select id="agg2">
           <option value="sum">Sum</option>
           <option value="count">Count rows</option>
@@ -623,6 +647,13 @@ function goS(n) {
   if (runBtn) runBtn.textContent = (n===2 && pivotResult) ? 'Re-run' : 'Run reconciliation';
 }
 
+function toggleFormat(n) {
+  const fmt = document.getElementById('fmt'+n).value;
+  const isLong = fmt === 'long';
+  document.getElementById('wide_hint'+n).style.display = isLong ? 'none' : '';
+  document.getElementById('long_cfg'+n).style.display = isLong ? '' : 'none';
+}
+
 function populateConfig() {
   const c1 = cols(1), c2 = cols(2);
 
@@ -807,14 +838,16 @@ function runRecon() {
   const tol      = parseFloat(document.getElementById('tol').value) || 0.01;
   const lbl1     = document.getElementById('lbl1').value || 'File 1';
   const lbl2     = document.getElementById('lbl2').value || 'File 2';
-  // Value column: null means use the paired column cell directly
-  const vsrc1    = document.getElementById('vsrc1').value;
-  const vsrc2    = document.getElementById('vsrc2').value;
-  const vcol1    = vsrc1==='col' ? document.getElementById('vcol1').value : null;
-  const vcol2    = vsrc2==='col' ? document.getElementById('vcol2').value : null;
-  if (vsrc1==='col' && !vcol1) { alert('Please select a value column for File 1.'); return; }
-  if (vsrc2==='col' && !vcol2) { alert('Please select a value column for File 2.'); return; }
-  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, vcol1, vcol2};
+  // Format: wide = period as column header, long = period as row value
+  const fmt1  = document.getElementById('fmt1').value;
+  const fmt2  = document.getElementById('fmt2').value;
+  const pcol1 = fmt1==='long' ? document.getElementById('pcol1').value : null;
+  const pcol2 = fmt2==='long' ? document.getElementById('pcol2').value : null;
+  const vcol1 = fmt1==='long' ? document.getElementById('vcol1').value : null;
+  const vcol2 = fmt2==='long' ? document.getElementById('vcol2').value : null;
+  if (fmt1==='long' && (!pcol1||!vcol1)) { alert('File 1: please select both Period column and Value column.'); return; }
+  if (fmt2==='long' && (!pcol2||!vcol2)) { alert('File 2: please select both Period column and Value column.'); return; }
+  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, fmt1, fmt2, pcol1, pcol2, vcol1, vcol2};
 
   // Tag pairs with their side for buildPivotFromPairs
   const pairs1 = pairs.map(p => ({...p, side:1}));
@@ -824,8 +857,8 @@ function runRecon() {
   const fd2 = applyFs(D[2], getFs(2));
 
   // Build separately per side using the correct column names
-  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1, vcol1);
-  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2, vcol2);
+  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1, fmt1, pcol1, vcol1);
+  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2, fmt2, pcol2, vcol2);
 
   const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])]
     .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
@@ -841,11 +874,24 @@ function runRecon() {
   goS(3);
 }
 
-function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, valueCol) {
+function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, fmt, periodCol, valueCol) {
   // colMaps = [{col, label}]
-  // valueCol: if set, use this column for the value instead of the paired column cell
+  // fmt = 'wide' or 'long'
+  // Wide: col is a column header, cell value is the amount
+  // Long: periodCol holds period values (matched by normalised date), valueCol holds amounts
   const cells = {}, counts = {}, src = {};
   const rowKeys = new Set();
+
+  // For long format: pre-build a map of normalised period value → pair label
+  const periodToLabel = {};
+  if (fmt === 'long') {
+    colMaps.forEach(({col, label}) => {
+      // col is the period value from the OTHER file (the "paired" column name)
+      // but for long format matching, we normalise the actual row period values
+      // The label IS what we match on (already normalised during auto-suggest)
+      periodToLabel[label.toLowerCase()] = label;
+    });
+  }
 
   data.forEach(row => {
     const rk = normaliseKey(row[rowCol], rowNorm);
@@ -853,13 +899,31 @@ function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, valueCol) {
     rowKeys.add(rk);
     if (!cells[rk]) { cells[rk]={}; counts[rk]={}; src[rk]={}; }
 
+    if (fmt === 'long') {
+      // Long format: match row period value to a pair label
+      const rawPeriod = row[periodCol];
+      if (rawPeriod===undefined || rawPeriod==='') return;
+      const normPeriod = dateToLabel(parseDate(String(rawPeriod))) || String(rawPeriod).trim().toLowerCase();
+      // Find which pair label this period matches
+      const matchLabel = periodToLabel[normPeriod.toLowerCase()];
+      if (!matchLabel) return;  // this period not in our column pairs — skip
+      const rawVal = row[valueCol];
+      if (rawVal===undefined || rawVal==='') return;
+      const v = aggType==='count' ? 1 : toNum(rawVal);
+      const label = matchLabel;
+      if (!src[rk][label]) src[rk][label]=[];
+      src[rk][label].push(row);
+      if (aggType==='count')    cells[rk][label]=(cells[rk][label]||0)+1;
+      else if (aggType==='sum') cells[rk][label]=(cells[rk][label]||0)+v;
+      else if (aggType==='avg'){ cells[rk][label]=(cells[rk][label]||0)+v; counts[rk][label]=(counts[rk][label]||0)+1; }
+      else if (aggType==='min') cells[rk][label]=cells[rk][label]===undefined?v:Math.min(cells[rk][label],v);
+      else if (aggType==='max') cells[rk][label]=cells[rk][label]===undefined?v:Math.max(cells[rk][label],v);
+      return;
+    }
+
+    // Wide format: paired col header is the period, cell value is the amount
     colMaps.forEach(({col, label}) => {
-      // Determine the value: use explicit valueCol if specified, else paired col cell
-      const rawVal = valueCol ? row[valueCol] : row[col];
-      // When using paired col as value, skip if the paired col isn't in this row
-      // When using valueCol, skip if paired col not in row (row not relevant to this period)
-      if (!valueCol && (rawVal===undefined || rawVal==='')) return;
-      if (valueCol && (row[col]===undefined || row[col]==='')) return;  // paired col acts as filter
+      const rawVal = row[col];
       if (rawVal===undefined || rawVal==='') return;
       const v = aggType==='count' ? 1 : toNum(rawVal);
       if (!src[rk][label]) src[rk][label]=[];

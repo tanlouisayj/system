@@ -279,6 +279,19 @@ input:focus, select:focus { outline: none; border-color: #555; }
         <input type="text" id="lbl1" placeholder="e.g. Essbase">
       </div>
     </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8">
+      <label style="font-weight:500;margin-bottom:6px">Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD)</span></label>
+      <div style="display:grid;grid-template-columns:1fr 60px 1fr 30px;gap:6px;align-items:center">
+        <select id="vfcol1" onchange="updateVFValues(1)" style="font-size:12px">
+          <option value="">-- no filter --</option>
+        </select>
+        <span style="text-align:center;font-size:12px;color:#888">=</span>
+        <select id="vfval1" style="font-size:12px">
+          <option value="">-- select value --</option>
+        </select>
+        <button class="rm-btn" onclick="clearVF(1)" title="Clear filter">×</button>
+      </div>
+    </div>
   </div>
 
   <!-- File 2 value config -->
@@ -322,6 +335,19 @@ input:focus, select:focus { outline: none; border-color: #555; }
       <div>
         <label>Label</label>
         <input type="text" id="lbl2" placeholder="e.g. GL">
+      </div>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8">
+      <label style="font-weight:500;margin-bottom:6px">Value filter <span style="font-weight:400;color:#aaa">(optional — e.g. DataType = MTD)</span></label>
+      <div style="display:grid;grid-template-columns:1fr 60px 1fr 30px;gap:6px;align-items:center">
+        <select id="vfcol2" onchange="updateVFValues(2)" style="font-size:12px">
+          <option value="">-- no filter --</option>
+        </select>
+        <span style="text-align:center;font-size:12px;color:#888">=</span>
+        <select id="vfval2" style="font-size:12px">
+          <option value="">-- select value --</option>
+        </select>
+        <button class="rm-btn" onclick="clearVF(2)" title="Clear filter">×</button>
       </div>
     </div>
   </div>
@@ -654,6 +680,20 @@ function toggleFormat(n) {
   document.getElementById('long_cfg'+n).style.display = isLong ? '' : 'none';
 }
 
+function updateVFValues(n) {
+  const col = document.getElementById('vfcol'+n).value;
+  const valSel = document.getElementById('vfval'+n);
+  if (!col) { valSel.innerHTML = '<option value="">-- select value --</option>'; return; }
+  const vals = uniqueVals(n, col);
+  valSel.innerHTML = '<option value="">-- select value --</option>' +
+    vals.map(v => `<option>${v}</option>`).join('');
+}
+
+function clearVF(n) {
+  document.getElementById('vfcol'+n).value = '';
+  document.getElementById('vfval'+n).innerHTML = '<option value="">-- select value --</option>';
+}
+
 function populateConfig() {
   const c1 = cols(1), c2 = cols(2);
 
@@ -847,7 +887,11 @@ function runRecon() {
   const vcol2 = fmt2==='long' ? document.getElementById('vcol2').value : null;
   if (fmt1==='long' && (!pcol1||!vcol1)) { alert('File 1: please select both Period column and Value column.'); return; }
   if (fmt2==='long' && (!pcol2||!vcol2)) { alert('File 2: please select both Period column and Value column.'); return; }
-  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, fmt1, fmt2, pcol1, pcol2, vcol1, vcol2};
+  const vfcol1 = document.getElementById('vfcol1').value;
+  const vfval1 = document.getElementById('vfval1').value;
+  const vfcol2 = document.getElementById('vfcol2').value;
+  const vfval2 = document.getElementById('vfval2').value;
+  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, fmt1, fmt2, pcol1, pcol2, vcol1, vcol2, vfcol1, vfval1, vfcol2, vfval2};
 
   // Tag pairs with their side for buildPivotFromPairs
   const pairs1 = pairs.map(p => ({...p, side:1}));
@@ -857,8 +901,8 @@ function runRecon() {
   const fd2 = applyFs(D[2], getFs(2));
 
   // Build separately per side using the correct column names
-  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1, fmt1, pcol1, vcol1);
-  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2, fmt2, pcol2, vcol2);
+  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1, fmt1, pcol1, vcol1, vfcol1, vfval1);
+  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2, fmt2, pcol2, vcol2, vfcol2, vfval2);
 
   const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])]
     .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
@@ -874,26 +918,27 @@ function runRecon() {
   goS(3);
 }
 
-function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, fmt, periodCol, valueCol) {
+function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, fmt, periodCol, valueCol, vfCol, vfVal) {
   // colMaps = [{col, label}]
   // fmt = 'wide' or 'long'
-  // Wide: col is a column header, cell value is the amount
-  // Long: periodCol holds period values (matched by normalised date), valueCol holds amounts
+  // vfCol/vfVal: optional value filter — e.g. DataType=MTD, filters rows before aggregation
   const cells = {}, counts = {}, src = {};
   const rowKeys = new Set();
+
+  // Apply value filter to data upfront if specified
+  const filteredData = (vfCol && vfVal)
+    ? data.filter(row => String(row[vfCol]||'').trim() === vfVal.trim())
+    : data;
 
   // For long format: pre-build a map of normalised period value → pair label
   const periodToLabel = {};
   if (fmt === 'long') {
     colMaps.forEach(({col, label}) => {
-      // col is the period value from the OTHER file (the "paired" column name)
-      // but for long format matching, we normalise the actual row period values
-      // The label IS what we match on (already normalised during auto-suggest)
       periodToLabel[label.toLowerCase()] = label;
     });
   }
 
-  data.forEach(row => {
+  filteredData.forEach(row => {
     const rk = normaliseKey(row[rowCol], rowNorm);
     if (!rk) return;
     rowKeys.add(rk);

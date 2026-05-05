@@ -34,7 +34,6 @@ select:focus,input:focus{outline:none;border-color:#555}
 .sheet-tab{padding:3px 10px;font-size:11px;border:1px solid #ccc;border-radius:12px;cursor:pointer;background:#fff;font-family:inherit;transition:all .15s}
 .sheet-tab:hover{border-color:#555}.sheet-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .sheet-info{font-size:11px;color:#2d7a4f;margin-top:5px;font-weight:500}
-/* Pair table */
 .pair-table{width:100%;border-collapse:collapse}
 .pair-table th{font-size:11px;font-weight:600;color:#666;padding:5px 7px;border-bottom:1px solid #e0e0e0;text-align:left}
 .pair-table td{padding:4px 5px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
@@ -45,14 +44,11 @@ select:focus,input:focus{outline:none;border-color:#555}
 .rm-btn:hover{background:#fee;color:#c0392b;border-color:#f5c6c6}
 .dim-row{display:grid;grid-template-columns:1fr 26px 1fr 110px;gap:7px;align-items:end}
 .dim-arrow{text-align:center;font-size:16px;color:#ccc;padding-bottom:8px}
-/* Filters */
 .fr-row{display:grid;grid-template-columns:1fr 85px 1fr 26px;gap:5px;align-items:center;margin-bottom:5px}
-/* Stats */
 .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
 .stat{background:#f8f8f8;border-radius:8px;padding:.9rem;text-align:center}
 .stat-n{font-size:20px;font-weight:600}.stat-l{font-size:11px;color:#888;margin-top:2px}
 .stat.green .stat-n{color:#2d7a4f}.stat.red .stat-n{color:#c0392b}.stat.amber .stat-n{color:#b7770d}
-/* Slicers */
 .slicer-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .slicer-panel{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:.9rem}
 .slicer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
@@ -61,7 +57,6 @@ select:focus,input:focus{outline:none;border-color:#555}
 .slicer-list{max-height:130px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:5px}
 .slicer-item{display:flex;align-items:center;gap:7px;padding:4px 9px;cursor:pointer;font-size:12px;border-bottom:1px solid #f8f8f8;width:100%;background:none;border-left:none;border-right:none;text-align:left;font-family:inherit}
 .slicer-item:last-child{border-bottom:none}.slicer-item:hover{background:#f5f5f5}.slicer-item.unchecked{color:#bbb}
-/* Pivot */
 .pivot-wrap{overflow-x:auto;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px}
 .pivot-table{border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:100%}
 .pivot-table th{padding:7px 10px;background:#f8f8f8;border:1px solid #e0e0e0;font-weight:600;font-size:10px;color:#555;text-align:center}
@@ -87,13 +82,26 @@ select:focus,input:focus{outline:none;border-color:#555}
 .toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .toolbar .btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .sum-bar{font-size:12px;color:#666;padding:7px 12px;background:#f8f8f8;border-radius:6px;border:1px solid #e0e0e0;margin-bottom:10px}
+.prev-box{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:7px;padding:10px;margin-top:8px}
+.prev-box table{width:100%;border-collapse:collapse;font-size:11px}
+.prev-box th{padding:4px 8px;border-bottom:1px solid #ddd;text-align:left;color:#666;font-weight:600}
+.prev-box td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
+.prev-box tr:last-child td{border-bottom:none}
 .footer{text-align:center;padding:1.5rem;font-size:11px;color:#aaa}
+.vmap-block{border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.vmap-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8f8f8;border-bottom:1px solid #e0e0e0;gap:8px;flex-wrap:wrap}
+.vmap-colrow{display:grid;grid-template-columns:1fr 28px 1fr 80px;gap:6px;align-items:center}
+.vmap-table{width:100%;border-collapse:collapse;font-size:12px}
+.vmap-table th{padding:5px 10px;background:#f8f8f8;border-bottom:1px solid #e0e0e0;font-size:11px;color:#666;font-weight:600;text-align:left}
+.vmap-table td{padding:4px 8px;border-bottom:1px solid #f5f5f5}
+.vmap-table tr:last-child td{border-bottom:none}
+.vmap-table select{font-size:11px;padding:3px 6px}
 </style>
 </head>
 <body>
 <div class="header">
   <h1>Pivot Reconciliation Tool</h1>
-  <span class="badge">Finance recon · Essbase · GL</span>
+  <span class="badge">Finance recon · Essbase · GL · Any two files</span>
 </div>
 <div class="container">
 
@@ -103,7 +111,7 @@ select:focus,input:focus{outline:none;border-color:#555}
     <span class="slbl">Step 1 — Upload files &amp; select sheets</span>
     <div class="grid2" style="margin-top:8px">
       <div>
-        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block" id="lbl_upload1">File 1 — Source</label>
+        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span class="sname-1">File 1</span> — Source</label>
         <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()" ondragover="evDrag(event,'zone1')" ondragleave="evLeave('zone1')" ondrop="evDrop(event,1)">
           <input type="file" id="f1" accept=".xlsx,.xls,.csv" onchange="loadFile(1,this)">
           <p style="font-size:13px;color:#666" id="z1t">Click or drag file here</p>
@@ -116,7 +124,7 @@ select:focus,input:focus{outline:none;border-color:#555}
         </div>
       </div>
       <div>
-        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block" id="lbl_upload2">File 2 — Comparison</label>
+        <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block"><span class="sname-2">File 2</span> — Comparison</label>
         <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()" ondragover="evDrag(event,'zone2')" ondragleave="evLeave('zone2')" ondrop="evDrop(event,2)">
           <input type="file" id="f2" accept=".xlsx,.xls,.csv" onchange="loadFile(2,this)">
           <p style="font-size:13px;color:#666" id="z2t">Click or drag file here</p>
@@ -143,15 +151,9 @@ select:focus,input:focus{outline:none;border-color:#555}
   <div class="card">
     <span class="slbl">Rows — what appears as row labels (e.g. LCIN, Cost Centre)</span>
     <div class="dim-row">
-      <div>
-        <label id="row1lbl">File 1 column</label>
-        <select id="row1"></select>
-      </div>
+      <div><label>File 1 column</label><select id="row1"></select></div>
       <div class="dim-arrow">↔</div>
-      <div>
-        <label id="row2lbl">File 2 column</label>
-        <select id="row2"></select>
-      </div>
+      <div><label>File 2 column</label><select id="row2"></select></div>
       <div><label>Normalise as</label>
         <select id="rownorm">
           <option value="text">Text (trim)</option>
@@ -165,44 +167,33 @@ select:focus,input:focus{outline:none;border-color:#555}
 
   <!-- COLUMNS -->
   <div class="card">
-    <span class="slbl">Columns — map each column in File 1 to its equivalent in File 2</span>
-    <p style="font-size:12px;color:#666;margin-bottom:10px">
-      Select a column from <strong id="col_f1name">File 1</strong> and its matching column from <strong id="col_f2name">File 2</strong>.
-      Use ⚡ Auto-suggest to detect matching date formats (e.g. Jan-26 ↔ 202601).
-      You can also add pairs manually for any column.
+    <span class="slbl">Columns — what spreads across as column headers</span>
+    <p style="font-size:12px;color:#666;margin-bottom:12px">
+      Pick which column in each file determines the column headers (e.g. the Period column, or the month columns).
+      The tool reads all unique values and lets you map them to each other.
     </p>
 
-    <div class="grid2" style="margin-bottom:10px">
+    <!-- Column field selectors -->
+    <div class="grid2" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
       <div>
-        <label><strong id="colsrc1lbl">File 1</strong> — data format</label>
-        <select id="f1src">
-          <option value="wide">Wide — columns ARE the periods (e.g. Jan-26 | Feb-26 as headers)</option>
-          <option value="long">Long — one column holds period values (e.g. a "Period" column)</option>
-        </select>
-        <div id="f1longcfg" style="display:none;margin-top:6px" class="grid2">
-          <div><label>Period column</label><select id="f1pcol"></select></div>
-          <div><label>Amount column</label><select id="f1vcol"></select></div>
-        </div>
+        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-1">File 1</span> — column field</label>
+        <select id="f1dimcol" onchange="onDimColChange()"></select>
+        <p id="f1dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
       </div>
       <div>
-        <label><strong id="colsrc2lbl">File 2</strong> — data format</label>
-        <select id="f2src">
-          <option value="wide">Wide — columns ARE the periods</option>
-          <option value="long">Long — one column holds period values</option>
-        </select>
-        <div id="f2longcfg" style="display:none;margin-top:6px" class="grid2">
-          <div><label>Period column</label><select id="f2pcol"></select></div>
-          <div><label>Amount column</label><select id="f2vcol"></select></div>
-        </div>
+        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-2">File 2</span> — column field</label>
+        <select id="f2dimcol" onchange="onDimColChange()"></select>
+        <p id="f2dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
       </div>
     </div>
 
+    <!-- Pair mapping table -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <p style="font-size:12px;color:#666">Each row maps one period in <span id="ptbl_f1">File 1</span> to one in <span id="ptbl_f2">File 2</span>.</p>
+        <p style="font-size:12px;color:#666">Map each value in <span class="sname-1">File 1</span> to the matching value in <span class="sname-2">File 2</span>.</p>
         <div style="display:flex;align-items:center;gap:5px">
           <label style="font-size:11px;color:#666;margin:0;white-space:nowrap">Match as</label>
-          <select id="colnorm" style="width:auto;font-size:11px">
+          <select id="colnorm" style="width:auto;font-size:11px" onchange="autoSuggest()">
             <option value="date">Date (Jan-26)</option>
             <option value="text">Text (exact)</option>
             <option value="num">Number</option>
@@ -210,6 +201,7 @@ select:focus,input:focus{outline:none;border-color:#555}
         </div>
       </div>
       <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="previewPairs()">🔍 Preview</button>
         <button class="btn btn-sm" onclick="autoSuggest()">⚡ Auto-suggest</button>
         <button class="btn btn-sm" onclick="addPair()">+ Add pair</button>
       </div>
@@ -217,25 +209,43 @@ select:focus,input:focus{outline:none;border-color:#555}
 
     <table class="pair-table">
       <thead><tr>
-        <th style="width:35%" id="pth1"><span id="pth1txt">File 1</span> column</th>
+        <th style="width:35%" id="pairHdr1"><span class="sname-1">File 1</span> value</th>
         <th style="width:7%;text-align:center">↔</th>
-        <th style="width:35%" id="pth2"><span id="pth2txt">File 2</span> column</th>
+        <th style="width:35%" id="pairHdr2"><span class="sname-2">File 2</span> value</th>
         <th style="width:15%">Label in output</th>
         <th style="width:8%"></th>
       </tr></thead>
       <tbody id="pairList"></tbody>
     </table>
     <p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
+    <div id="pairPrev" class="prev-box" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
+        <button class="rm-btn" onclick="document.getElementById('pairPrev').style.display='none'">×</button>
+      </div>
+      <div id="pairPrevContent"></div>
+    </div>
+  </div>
+
+    <!-- VALUE MAPPING -->
+  <div class="card" id="vmapCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div>
+        <span class="slbl" style="margin-bottom:2px">Column value mapping <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional)</span></span>
+        <p style="font-size:11px;color:#888">Map values that mean the same thing across files — e.g. "Actual" = "ACT", "Jan-26" = "202601".</p>
+      </div>
+      <button class="btn btn-sm" onclick="addVmap()">+ Add column mapping</button>
+    </div>
+    <div id="vmapList"></div>
   </div>
 
   <!-- VALUES -->
   <div class="grid2">
     <div class="card">
-      <span class="slbl" id="val1slbl">Values — File 1</span>
+      <span class="slbl">Values — <span class="sname-1">File 1</span></span>
       <div style="margin-bottom:8px">
-        <label>Amount column</label>
+        <label>Amount column <span id="amt1hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
         <select id="amt1"></select>
-        <p style="font-size:11px;color:#aaa;margin-top:3px">Which column holds the numbers to aggregate</p>
       </div>
       <div class="grid2" style="margin-bottom:8px">
         <div><label>Aggregation</label>
@@ -247,17 +257,16 @@ select:focus,input:focus{outline:none;border-color:#555}
         <div><label>Label</label><input type="text" id="lbl1" placeholder="e.g. Essbase"></div>
       </div>
       <div style="padding-top:8px;border-top:1px solid #f0f0f0">
-        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. DataType = MTD)</span></label>
+        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. DataType = MTD, Version = Actual)</span></label>
         <div id="vflist1"></div>
-        <button class="btn btn-sm" onclick="addVF(1)" style="margin-top:4px">+ Add filter</button>
+        <button class="btn btn-sm" onclick="addVF(1)" style="margin-top:4px">+ Add value filter</button>
       </div>
     </div>
     <div class="card">
-      <span class="slbl" id="val2slbl">Values — File 2</span>
+      <span class="slbl" >Values — <span class="sname-2">File 2</span></span>
       <div style="margin-bottom:8px">
-        <label>Amount column</label>
+        <label>Amount column <span id="amt2hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
         <select id="amt2"></select>
-        <p style="font-size:11px;color:#aaa;margin-top:3px">Which column holds the numbers to aggregate</p>
       </div>
       <div class="grid2" style="margin-bottom:8px">
         <div><label>Aggregation</label>
@@ -269,9 +278,9 @@ select:focus,input:focus{outline:none;border-color:#555}
         <div><label>Label</label><input type="text" id="lbl2" placeholder="e.g. GL"></div>
       </div>
       <div style="padding-top:8px;border-top:1px solid #f0f0f0">
-        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. Basis = Actual)</span></label>
+        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. DataType = MTD)</span></label>
         <div id="vflist2"></div>
-        <button class="btn btn-sm" onclick="addVF(2)" style="margin-top:4px">+ Add filter</button>
+        <button class="btn btn-sm" onclick="addVF(2)" style="margin-top:4px">+ Add value filter</button>
       </div>
     </div>
   </div>
@@ -284,12 +293,12 @@ select:focus,input:focus{outline:none;border-color:#555}
         <input type="number" id="tol" value="0.01" step="0.01" min="0">
       </div>
       <div>
-        <label>Row filters — <span id="rf1lbl">File 1</span> <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
+        <label><span class="sname-1">File 1</span> row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
         <div id="flist1"></div>
         <button class="btn btn-sm" onclick="addRowFilter(1)" style="margin-top:4px">+ Filter</button>
       </div>
       <div>
-        <label>Row filters — <span id="rf2lbl">File 2</span> <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
+        <label><span class="sname-2">File 2</span> row filters <span style="font-weight:400;color:#aaa;font-size:11px">(optional)</span></label>
         <div id="flist2"></div>
         <button class="btn btn-sm" onclick="addRowFilter(2)" style="margin-top:4px">+ Filter</button>
       </div>
@@ -351,201 +360,186 @@ select:focus,input:focus{outline:none;border-color:#555}
 </div>
 
 </div>
-<div class="footer">All data stays in your browser — nothing uploaded or shared.</div>
-<script>
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={};
-var fcC={1:0,2:0}, vfC={1:0,2:0}, pC=0;
-var curView='all', openDrill=null;
-var selRows=new Set(), selCols=new Set();
-var SNAME={1:'File 1', 2:'File 2'};
+<div class="footer">All data stays in your browser — nothing is uploaded or shared.</div>
 
-// ══════════════════════════════════════════════
-//  DATE PARSING
-// ══════════════════════════════════════════════
+<script>
+// ── STATE ──
+var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, pC=0;
+var curView='all', openDrill=null, selRows=new Set(), selCols=new Set();
+
+// ── DATE PARSING ──
 var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
   january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
 var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function parseDt(s){
+function parseDt(s) {
   var raw=String(s||'').trim(), n=raw.toLowerCase().replace(/[^a-z0-9]/g,'');
   var num=n.replace(/[a-z]/g,''), alpha=n.replace(/[0-9]/g,'');
-  if(alpha&&MONTHS[alpha]&&num.length>=2){
-    return {m:MONTHS[alpha], y:num.length<=2?2000+parseInt(num):parseInt(num.slice(-4))};
+  if (alpha && MONTHS[alpha] && num.length>=2) {
+    var y=num.length<=2 ? 2000+parseInt(num) : parseInt(num.slice(-4));
+    return {m:MONTHS[alpha],y:y};
   }
-  if(/^\d{6}$/.test(n)){
-    var m1=parseInt(n.slice(0,2)); if(m1>=1&&m1<=12) return {m:m1,y:parseInt(n.slice(2))};
-    var y2=parseInt(n.slice(0,4)),m2=parseInt(n.slice(4,6)); if(m2>=1&&m2<=12) return {m:m2,y:y2};
+  if (/^\d{6}$/.test(n)) {
+    var m1=parseInt(n.slice(0,2)); if (m1>=1&&m1<=12) return {m:m1,y:parseInt(n.slice(2))};
+    var y2=parseInt(n.slice(0,4)),m2=parseInt(n.slice(4,6)); if (m2>=1&&m2<=12) return {m:m2,y:y2};
   }
-  if(/^\d{8}$/.test(n)){var y=parseInt(n.slice(0,4)),m=parseInt(n.slice(4,6));if(m>=1&&m<=12)return{m:m,y:y};}
-  if(/[\/\-]/.test(raw)){var d=new Date(raw);if(!isNaN(d))return{m:d.getMonth()+1,y:d.getFullYear()};}
+  if (/^\d{8}$/.test(n)) { var y3=parseInt(n.slice(0,4)),m3=parseInt(n.slice(4,6)); if(m3>=1&&m3<=12) return {m:m3,y:y3}; }
+  if (/[\/\-]/.test(raw)) { var d=new Date(raw); if(!isNaN(d)) return {m:d.getMonth()+1,y:d.getFullYear()}; }
   return null;
 }
-function dtLabel(pd){return pd?MN[pd.m-1]+'-'+String(pd.y).slice(-2):null;}
-function dtSort(pd){return pd?pd.y*12+pd.m:0;}
-function normPd(val,norm){
+function dtLabel(pd) { return pd ? MN[pd.m-1]+'-'+String(pd.y).slice(-2) : null; }
+function dtSort(pd) { return pd ? pd.y*12+pd.m : 0; }
+function normPd(val,norm) {
   var s=String(val||'').trim();
-  if(norm==='date'){var pd=parseDt(s);return pd?dtLabel(pd):s.toLowerCase();}
-  if(norm==='num') return String(parseFloat(s)||0);
+  if (norm==='date') { var pd=parseDt(s); return pd ? dtLabel(pd) : s.toLowerCase(); }
+  if (norm==='num') return String(parseFloat(s)||0);
   return s;
 }
 
-// ══════════════════════════════════════════════
-//  FILE LOADING + SHEET SELECTION
-// ══════════════════════════════════════════════
+// ── FILE LOADING ──
 function evDrag(e,id){e.preventDefault();document.getElementById(id).classList.add('drag');}
 function evLeave(id){document.getElementById(id).classList.remove('drag');}
 function evDrop(e,n){e.preventDefault();evLeave('zone'+n);var f=e.dataTransfer.files[0];if(f)parseFile(n,f);}
 function loadFile(n,inp){if(inp.files[0])parseFile(n,inp.files[0]);}
 
-function parseFile(n,file){
+function parseFile(n,file) {
   var r=new FileReader();
   r.onload=function(e){
     var wb;
-    try{
+    try {
       wb=file.name.toLowerCase().endsWith('.csv')
         ?XLSX.read(e.target.result,{type:'string'})
         :XLSX.read(new Uint8Array(e.target.result),{type:'array'});
-    }catch(err){alert('Could not read: '+file.name);return;}
+    } catch(err){alert('Could not read: '+file.name);return;}
     WB[n]=wb;
     document.getElementById('zone'+n).classList.add('loaded');
-    if(wb.SheetNames.length===1){
+    if (wb.SheetNames.length===1) {
       loadSheet(n,wb.SheetNames[0],file.name);
       document.getElementById('sp'+n).style.display='none';
     } else {
       document.getElementById('z'+n+'t').textContent=file.name+' — '+wb.SheetNames.length+' sheets';
       document.getElementById('sp'+n).style.display='block';
       document.getElementById('st'+n).innerHTML=wb.SheetNames.map(function(s){
-        return '<button class="sheet-tab" onclick="pickSheet('+n+',\''+s.replace(/'/g,"\\'")+'\',this)">'+s+'</button>';
+        return '<button class="sheet-tab" onclick="pickSheet('+n+',\''+s.replace(/'/g,"\\'")+'\''+',this)">'+s+'</button>';
       }).join('');
       D[n]=[]; checkReady();
     }
   };
-  if(file.name.toLowerCase().endsWith('.csv')) r.readAsText(file);
+  if (file.name.toLowerCase().endsWith('.csv')) r.readAsText(file);
   else r.readAsArrayBuffer(file);
 }
 
-function pickSheet(n,name,btn){
+function pickSheet(n,name,btn) {
   document.querySelectorAll('#st'+n+' .sheet-tab').forEach(function(t){t.classList.remove('active');});
   btn.classList.add('active');
   loadSheet(n,name,null);
 }
 
-function loadSheet(n,name,fileName){
+var SNAME={1:'File 1',2:'File 2'}; // sheet names, updated on load
+
+function loadSheet(n,name,fileName) {
   var data=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
   D[n]=data; D[n]._sheet=name;
   SNAME[n]=name;
   var nc=Object.keys(data[0]||{}).length;
   document.getElementById('z'+n+'t').textContent=(fileName?fileName+' — ':'')+name;
   document.getElementById('si'+n).textContent='✓ "'+name+'" — '+data.length+' rows, '+nc+' columns';
-  // Update all labels that reference this file's name
-  updateAllLabels();
+  updateSheetLabels(n,name);
   checkReady();
 }
 
-function updateAllLabels(){
-  // Step 1 upload labels
-  document.getElementById('lbl_upload1').textContent=SNAME[1]+' — Source';
-  document.getElementById('lbl_upload2').textContent=SNAME[2]+' — Comparison';
-  // Step 2 column section
-  document.getElementById('col_f1name').textContent=SNAME[1];
-  document.getElementById('col_f2name').textContent=SNAME[2];
-  document.getElementById('colsrc1lbl').textContent=SNAME[1];
-  document.getElementById('colsrc2lbl').textContent=SNAME[2];
-  document.getElementById('pth1txt').textContent=SNAME[1];
-  document.getElementById('pth2txt').textContent=SNAME[2];
-  document.getElementById('ptbl_f1').textContent=SNAME[1];
-  document.getElementById('ptbl_f2').textContent=SNAME[2];
-  // Step 2 rows
-  document.getElementById('row1lbl').textContent=SNAME[1]+' column';
-  document.getElementById('row2lbl').textContent=SNAME[2]+' column';
-  // Step 2 values
-  document.getElementById('val1slbl').textContent='Values — '+SNAME[1];
-  document.getElementById('val2slbl').textContent='Values — '+SNAME[2];
-  // Step 2 row filters
-  document.getElementById('rf1lbl').textContent=SNAME[1];
-  document.getElementById('rf2lbl').textContent=SNAME[2];
-  // Prefill labels if blank
-  var l1=document.getElementById('lbl1'), l2=document.getElementById('lbl2');
-  if(l1&&!l1.value) l1.value=SNAME[1];
-  if(l2&&!l2.value) l2.value=SNAME[2];
+function updateSheetLabels(n,name) {
+  // Update every element with class sname-n to the sheet name
+  document.querySelectorAll('.sname-'+n).forEach(function(el){el.textContent=name;});
 }
 
 function checkReady(){document.getElementById('s1btn').disabled=!(D[1].length&&D[2].length);}
 
-// ══════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════
-function goStep(n){
+// ── NAVIGATION ──
+function goStep(n) {
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
   document.getElementById('step'+n).classList.add('active');
-  if(n===2) initConfig();
+  if (n===2) initConfig();
   var rb=document.getElementById('runBtn');
-  if(rb) rb.textContent=(n===2&&PR)?'Re-run':'Run reconciliation';
+  if (rb) rb.textContent=(n===2&&PR)?'Re-run':'Run reconciliation';
 }
 
-// ══════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════
+// ── CONFIG ──
 function getCols(n){return Object.keys(D[n][0]||{});}
 
-function fillSel(id,n,sel){
+function fillSel(id,n,sel) {
   document.getElementById(id).innerHTML=getCols(n).map(function(c){
     return '<option'+(c===sel?' selected':'')+'>'+c+'</option>';
   }).join('');
 }
 
-// Get options for the pair table — ALL columns from file n
-function getPairOpts(n){
-  return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
-}
-
-// For long format: get unique period values from the period column
-function getLongVals(n){
+function getPairOpts(n) {
+  var src=document.getElementById('f'+n+'src').value;
+  // Wide/header format: options are column names from the file
+  if (src==='header') {
+    return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
+  }
+  // Long/values format: options are unique period values from the period column
   var pcol=document.getElementById('f'+n+'pcol').value;
-  if(!pcol) return [];
-  var seen={}, vals=[];
-  D[n].forEach(function(r){
-    var v=String(r[pcol]||'').trim();
-    if(v&&!seen[v]){seen[v]=1;vals.push(v);}
-  });
-  vals.sort(function(a,b){
+  if (!pcol) {
+    // Period column not set yet — fall back to showing all column names
+    // so the dropdown is still interactive (user can pick manually)
+    return '<optgroup label="Period column not set — showing all columns">'
+      +getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('')
+      +'</optgroup>';
+  }
+  var norm=document.getElementById('colnorm').value;
+  var seen=[];
+  D[n].forEach(function(r){var v=String(r[pcol]||'').trim();if(v&&seen.indexOf(v)<0)seen.push(v);});
+  seen.sort(function(a,b){
     var da=parseDt(a),db=parseDt(b);
     if(da&&db) return dtSort(da)-dtSort(db);
     return a.localeCompare(b,undefined,{numeric:true});
   });
-  return vals;
+  if(!seen.length) return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
+  return seen.map(function(v){return '<option>'+v+'</option>';}).join('');
 }
 
-function toggleSrc(n){
-  var src=document.getElementById('f'+n+'src').value;
-  var cfg=document.getElementById('f'+n+'longcfg');
-  cfg.style.display=src==='long'?'grid':'none';
-  if(src==='long'){
-    var cx=getCols(n), opts='<option value="">— select —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
-    document.getElementById('f'+n+'pcol').innerHTML=opts;
-    document.getElementById('f'+n+'vcol').innerHTML=opts;
-    var pg=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
-    var ag=cx.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal/i.test(c);});
-    if(pg) document.getElementById('f'+n+'pcol').value=pg;
-    if(ag) document.getElementById('f'+n+'vcol').value=ag;
-  }
+function refreshOpts(n) {
+  var cls=n===1?'.pf1':'.pf2';
+  var opts=getPairOpts(n);
+  document.querySelectorAll('#pairList tr').forEach(function(tr){
+    var sel=tr.querySelector(cls); if(!sel) return;
+    var cur=sel.value; sel.innerHTML=opts;
+    for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===cur||sel.options[i].text===cur){sel.value=sel.options[i].value;break;}}
+  });
 }
 
-function getSrcInfo(){
+function updateSrc() {
+  [1,2].forEach(function(n){
+    var src=document.getElementById('f'+n+'src').value, isLong=src==='values';
+    var ld=document.getElementById('f'+n+'long');
+    ld.style.display=isLong?'grid':'none';
+    if (isLong) {
+      var cx=getCols(n), opts='<option value="">— select —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
+      document.getElementById('f'+n+'pcol').innerHTML=opts;
+      document.getElementById('f'+n+'vcol').innerHTML=opts;
+      var pg=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
+      var ag=cx.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal/i.test(c);});
+      if(pg) document.getElementById('f'+n+'pcol').value=pg;
+      if(ag) document.getElementById('f'+n+'vcol').value=ag;
+    }
+    refreshOpts(n);
+  });
+}
+
+function getSrcInfo() {
   return {
-    f1src:  document.getElementById('f1src').value,
-    f2src:  document.getElementById('f2src').value,
-    f1pcol: document.getElementById('f1pcol').value||null,
-    f1vcol: document.getElementById('f1vcol').value||null,
-    f2pcol: document.getElementById('f2pcol').value||null,
-    f2vcol: document.getElementById('f2vcol').value||null
+    f1src:document.getElementById('f1src').value,
+    f2src:document.getElementById('f2src').value,
+    f1pcol:document.getElementById('f1pcol').value||null,
+    f1vcol:document.getElementById('f1vcol').value||null,
+    f2pcol:document.getElementById('f2pcol').value||null,
+    f2vcol:document.getElementById('f2vcol').value||null
   };
 }
 
-function initConfig(){
+function initConfig() {
   var c1=getCols(1), c2=getCols(2);
   var blank='<option value="">— select —</option>';
 
@@ -565,61 +559,121 @@ function initConfig(){
 
   // Value filter cols
   var vfo='<option value="">— no filter —</option>';
-  ['vfcol1','vfcol2'].forEach(function(id,i){
-    // no longer in HTML — handled via addVF
-  });
+  document.getElementById('vfcol1').innerHTML=vfo+c1.map(function(c){return '<option>'+c+'</option>';}).join('');
+  document.getElementById('vfcol2').innerHTML=vfo+c2.map(function(c){return '<option>'+c+'</option>';}).join('');
+  var vg1=c1.find(function(c){return /datatype|type|measure|basis|scenario|version|mtd|ytd/i.test(c);});
+  var vg2=c2.find(function(c){return /datatype|type|measure|basis|scenario|version|mtd|ytd/i.test(c);});
+  if(vg1){document.getElementById('vfcol1').value=vg1;updateVFVals(1);}
+  if(vg2){document.getElementById('vfcol2').value=vg2;updateVFVals(2);}
 
-  // Auto-detect format
+  // Pre-fill labels from sheet names
+  if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
+  if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
+
+  // Populate dimension column dropdowns, guess best column
   [1,2].forEach(function(n){
     var cx=n===1?c1:c2;
+    var opts='<option value="">— select column —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
+    document.getElementById('f'+n+'dimcol').innerHTML=opts;
+    // Guess: prefer date-looking column headers (wide), else period-named column (long)
     var dateCols=cx.filter(function(c){return parseDt(c)!==null;});
-    var hasPeriod=cx.some(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
-    var hasAmt=cx.some(function(c){return /amount|amt|value|balance|lcy|fcy|bal/i.test(c);});
-    var guessLong=dateCols.length<2&&hasPeriod&&hasAmt;
-    document.getElementById('f'+n+'src').value=guessLong?'long':'wide';
-    toggleSrc(n);
+    var periodCol=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
+    var guess=dateCols.length>0?dateCols[0]:(periodCol||cx[0]);
+    document.getElementById('f'+n+'dimcol').value=guess;
   });
+  onDimColChange();
 
   // Clear filters
   document.getElementById('flist1').innerHTML='';
   document.getElementById('flist2').innerHTML='';
   document.getElementById('vflist1').innerHTML='';
   document.getElementById('vflist2').innerHTML='';
-  fcC={1:0,2:0}; vfC={1:0,2:0};
+  document.getElementById('vmapList').innerHTML='';
+  fcC={1:0,2:0}; vfC={1:0,2:0}; vmapC=0;
 
-  // Labels
-  if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
-  if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
-
-  // Auto-suggest pairs if none yet
-  if(document.querySelectorAll('#pairList tr').length===0) autoSuggest();
+  // Auto-suggest if no pairs yet
+  if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
 }
 
-// ══════════════════════════════════════════════
-//  PAIR TABLE
-// ══════════════════════════════════════════════
-function addPair(f1v,f2v,lbl,score){
+// ── COLUMN DIMENSION ──
+function isDimWide(n, colName) {
+  return parseDt(colName) !== null;
+}
+
+function getDimVals(n, colName) {
+  if (!colName) return [];
+  if (isDimWide(n, colName)) {
+    return [{key: colName, pd: parseDt(colName)}];
+  }
+  var seen = {}, result = [];
+  D[n].forEach(function(r) {
+    var v = String(r[colName]||'').trim();
+    if (v && !seen[v]) { seen[v]=1; result.push({key:v, pd:parseDt(v)}); }
+  });
+  result.sort(function(a,b) {
+    if(a.pd&&b.pd) return dtSort(a.pd)-dtSort(b.pd);
+    return a.key.localeCompare(b.key,undefined,{numeric:true});
+  });
+  return result;
+}
+
+function onDimColChange() {
+  var c1=document.getElementById('f1dimcol').value;
+  var c2=document.getElementById('f2dimcol').value;
+  function setHint(n,col) {
+    var el=document.getElementById('f'+n+'dimhint'); if(!el||!col) return;
+    if(isDimWide(n,col)) {
+      el.textContent='Wide — "'+col+'" is a column header. Each date-named column = one period.';
+    } else {
+      var vals=getDimVals(n,col);
+      el.textContent='Long — '+vals.length+' unique values in "'+col+'" column.';
+    }
+  }
+  setHint(1,c1); setHint(2,c2);
+  refreshOpts(1); refreshOpts(2);
+}
+
+function getPairOpts(n) {
+  var colName=document.getElementById('f'+n+'dimcol').value;
+  if(!colName) return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
+  var vals=getDimVals(n,colName);
+  if(!vals.length) return '<option value="">— no values found —</option>';
+  return vals.map(function(v){return '<option>'+v.key+'</option>';}).join('');
+}
+
+function getSrcInfo() {
+  var f1col=document.getElementById('f1dimcol').value||'';
+  var f2col=document.getElementById('f2dimcol').value||'';
+  return {
+    f1src:  isDimWide(1,f1col)?'header':'values',
+    f2src:  isDimWide(2,f2col)?'header':'values',
+    f1pcol: isDimWide(1,f1col)?null:f1col,
+    f2pcol: isDimWide(2,f2col)?null:f2col,
+    f1vcol: null, f2vcol: null
+  };
+}
+
+// ── PAIR TABLE ──
+function addPair(f1v,f2v,lbl,score) {
   var id='p'+(++pC);
   var ccls=score>=90?'conf-high':score>=50?'conf-med':'conf-low';
   var ctxt=score>=90?'✓ Date match':score>=50?'~ Partial':'? Manual';
   var f1o=getPairOpts(1), f2o=getPairOpts(2);
   var lb=lbl||(f1v||'');
   var tr=document.createElement('tr'); tr.id=id;
-  tr.innerHTML='<td><select class="pf1" onchange="updatePairLbl(\''+id+'\')">'+f1o+'</select></td>'
+  tr.innerHTML='<td><select class="pf1" onchange="updateLbl(\''+id+'\')">'+f1o+'</select></td>'
     +'<td style="text-align:center">'+(score!==undefined?'<span class="conf-badge '+ccls+'">'+ctxt+'</span>':'<span style="color:#ccc;font-size:16px">↔</span>')+'</td>'
-    +'<td><select class="pf2" onchange="updatePairLbl(\''+id+'\')">'+f2o+'</select></td>'
+    +'<td><select class="pf2" onchange="updateLbl(\''+id+'\')">'+f2o+'</select></td>'
     +'<td><input type="text" class="plbl" value="'+lb+'" placeholder="auto" style="font-size:11px"></td>'
     +'<td><button class="rm-btn" onclick="if(document.querySelectorAll(\'#pairList tr\').length>1)document.getElementById(\''+id+'\').remove();updMsg()">×</button></td>';
   document.getElementById('pairList').appendChild(tr);
-  // Set selected values
   var nt=document.getElementById(id);
-  function setVal(sel,v){if(!v)return;for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===v||sel.options[i].text===v){sel.value=sel.options[i].value;return;}}}
-  setVal(nt.querySelector('.pf1'),f1v);
-  setVal(nt.querySelector('.pf2'),f2v);
+  if(f1v){var s=nt.querySelector('.pf1');for(var i=0;i<s.options.length;i++){if(s.options[i].value===f1v||s.options[i].text===f1v){s.value=s.options[i].value;break;}}}
+  if(f2v){var s2=nt.querySelector('.pf2');for(var i=0;i<s2.options.length;i++){if(s2.options[i].value===f2v||s2.options[i].text===f2v){s2.value=s2.options[i].value;break;}}}
   updMsg();
 }
 
-function updatePairLbl(id){
+function updateLbl(id) {
   var row=document.getElementById(id); if(!row) return;
   var f1v=row.querySelector('.pf1').value, inp=row.querySelector('.plbl');
   if(!inp.value||inp.dataset.auto==='true'){
@@ -627,7 +681,7 @@ function updatePairLbl(id){
   }
 }
 
-function getPairs(){
+function getPairs() {
   var norm=document.getElementById('colnorm').value||'date';
   return Array.from(document.querySelectorAll('#pairList tr')).map(function(tr){
     var f1=tr.querySelector('.pf1').value, lbl=tr.querySelector('.plbl').value||f1;
@@ -635,152 +689,186 @@ function getPairs(){
   });
 }
 
-function updMsg(){
+function updMsg() {
   var n=document.querySelectorAll('#pairList tr').length;
-  document.getElementById('pairMsg').textContent=n===0?'No pairs. Click Auto-suggest.':n+' pair'+(n===1?'':'s')+' configured.';
+  document.getElementById('pairMsg').textContent=n===0?'No pairs yet. Click Auto-suggest.':n+' pair'+(n===1?'':'s')+' configured.';
 }
 
-function autoSuggest(){
+function autoSuggest() {
   document.getElementById('pairList').innerHTML=''; pC=0;
+  var c1col=document.getElementById('f1dimcol').value;
+  var c2col=document.getElementById('f2dimcol').value;
+  if(!c1col){document.getElementById('pairMsg').textContent='Select a column for '+SNAME[1]+' first.';return;}
+
+  var it1=getDimVals(1,c1col);
+  var it2=c2col?getDimVals(2,c2col):[];
+  if(!it1.length){addPair('','','',0);document.getElementById('pairMsg').textContent='No values found. Add pairs manually.';return;}
+
   var norm=document.getElementById('colnorm').value||'date';
-
-  // Get candidate values from each file
-  function getItems(n){
-    var src=document.getElementById('f'+n+'src').value;
-    if(src==='long'){
-      // Long: unique values from period column
-      var vals=getLongVals(n);
-      return vals.map(function(v){return {key:v,pd:parseDt(v)};}).filter(function(x){return x.pd;});
-    } else {
-      // Wide: date-looking column names
-      return getCols(n).map(function(c){return {key:c,pd:parseDt(c)};}).filter(function(x){return x.pd;});
-    }
-  }
-
-  var it1=getItems(1), it2=getItems(2);
-
-  // If no date items found, still add one blank row so user can pick manually
-  if(!it1.length){
-    addPair(getCols(1)[0]||'', getCols(2)[0]||'', '', 0);
-    document.getElementById('pairMsg').textContent='No date-format columns/values detected. Select pairs manually.';
-    return;
-  }
-
   var used={}, pairs=[];
   it1.forEach(function(x1){
     var best=null, bs=-1;
     it2.forEach(function(x2){
       if(used[x2.key]) return;
-      var match=x2.pd&&x1.pd&&x2.pd.m===x1.pd.m&&x2.pd.y===x1.pd.y;
+      var match=false;
+      if(x1.pd&&x2.pd) match=(x1.pd.m===x2.pd.m&&x1.pd.y===x2.pd.y);
+      else match=(normPd(x1.key,norm)===normPd(x2.key,norm));
       if(match&&100>bs){bs=100;best=x2;}
     });
-    var lb=dtLabel(x1.pd)||x1.key;
-    if(best){used[best.key]=1;pairs.push({f1:x1.key,f2:best.key,lb:lb,score:100,sk:dtSort(x1.pd)});}
-    else{pairs.push({f1:x1.key,f2:it2[0]?it2[0].key:'',lb:lb,score:0,sk:dtSort(x1.pd)});}
+    var lb=x1.pd?dtLabel(x1.pd):x1.key;
+    if(best){used[best.key]=1;pairs.push({f1:x1.key,f2:best.key,lb:lb,score:100,sk:x1.pd?dtSort(x1.pd):0});}
+    else{pairs.push({f1:x1.key,f2:it2[0]?it2[0].key:'',lb:lb,score:0,sk:x1.pd?dtSort(x1.pd):0});}
   });
   pairs.sort(function(a,b){return a.sk-b.sk;});
   pairs.forEach(function(p){addPair(p.f1,p.f2,p.lb,p.score);});
   var m=pairs.filter(function(p){return p.score===100;}).length;
-  document.getElementById('pairMsg').textContent=m+' of '+pairs.length+' pairs matched by date.'+(m<pairs.length?' Review ? pairs.':'');
+  document.getElementById('pairMsg').textContent=m+' of '+pairs.length+' values matched.'+(m<pairs.length?' Check ? pairs.':'');
+}
+function previewPairs() {
+  var pairs=getPairs(), si=getSrcInfo(), norm=document.getElementById('colnorm').value||'date';
+  var rowCol1=document.getElementById('row1').value, rowCol2=document.getElementById('row2').value;
+  var fd1=applyFilters(D[1],getRowFilters(1));
+  var fd2=applyFilters(D[2],getRowFilters(2));
+  var ffd1=applyVFs(fd1,getVFs(1));
+  var ffd2=applyVFs(fd2,getVFs(2));
+  var c1col=document.getElementById('f1dimcol').value;
+  var c2col=document.getElementById('f2dimcol').value;
+
+  var html='<table><thead><tr><th>Label</th><th>'+SNAME[1]+' value</th><th style="text-align:right">F1 rows</th><th>'+SNAME[2]+' value</th><th style="text-align:right">F2 rows</th><th style="text-align:center">OK?</th></tr></thead><tbody>';
+  var warnings=[];
+  pairs.forEach(function(p){
+    var c1=0,c2=0;
+    if(si.f1src==='header'){
+      c1=ffd1.filter(function(r){return String(r[rowCol1]||'').trim()!==''&&r[p.f1col]!==undefined&&r[p.f1col]!=='';}).length;
+    } else {
+      if(si.f1pcol) c1=ffd1.filter(function(r){return normPd(String(r[si.f1pcol]||''),norm)===p.normVal;}).length;
+    }
+    if(si.f2src==='header'){
+      c2=ffd2.filter(function(r){return String(r[rowCol2]||'').trim()!==''&&r[p.f2col]!==undefined&&r[p.f2col]!=='';}).length;
+    } else {
+      if(si.f2pcol) c2=ffd2.filter(function(r){return normPd(String(r[si.f2pcol]||''),norm)===p.normVal;}).length;
+    }
+    var ok=c1>0&&c2>0, clr=ok?'#2d7a4f':'#c0392b';
+    if(c2===0) warnings.push(p.f2col);
+    html+='<tr><td style="font-weight:500">'+p.label+'</td><td style="font-family:monospace;font-size:10px">'+p.f1col+'</td>'
+      +'<td style="text-align:right;color:'+(c1===0?'#c0392b':'inherit')+'">'+c1+'</td>'
+      +'<td style="font-family:monospace;font-size:10px">'+p.f2col+'</td>'
+      +'<td style="text-align:right;color:'+(c2===0?'#c0392b':'inherit')+'">'+c2+'</td>'
+      +'<td style="text-align:center;color:'+clr+';font-weight:600">'+(ok?'✓':'✗')+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  if(warnings.length) html+='<p style="margin-top:8px;color:#b7770d;font-size:11px">⚠ 0 rows found for: '+warnings.join(', ')+'. Check column selection and value filter.</p>';
+  document.getElementById('pairPrevContent').innerHTML=html;
+  document.getElementById('pairPrev').style.display='';
 }
 
-// ══════════════════════════════════════════════
-//  VALUE FILTERS (multiple per file)
-// ══════════════════════════════════════════════
-function uniqueVals(n,col){
-  var seen=[];
-  D[n].forEach(function(r){var v=String(r[col]||'').trim();if(v&&seen.indexOf(v)<0)seen.push(v);});
-  return seen.sort(function(a,b){return a.localeCompare(b,undefined,{numeric:true});}).slice(0,300);
+// ── VALUE MAPPING ──
+var vmapC = 0;
+
+function addVmap() {
+  var id = 'vm_' + (++vmapC);
+  var c1 = getCols(1), c2 = getCols(2);
+  var d = document.createElement('div');
+  d.className = 'vmap-block'; d.id = id;
+
+  // Header
+  var hdr = document.createElement('div'); hdr.className = 'vmap-header';
+  var colRow = document.createElement('div'); colRow.className = 'vmap-colrow'; colRow.style.flex = '1';
+  var s1 = document.createElement('select'); s1.className = 'vmc1';
+  s1.innerHTML = c1.map(function(c){return '<option>'+c+'</option>';}).join('');
+  s1.onchange = function(){buildVmapRows(id);};
+  var arrow = document.createElement('span'); arrow.textContent = '↔'; arrow.style.cssText = 'text-align:center;color:#ccc;font-size:16px';
+  var s2 = document.createElement('select'); s2.className = 'vmc2';
+  s2.innerHTML = c2.map(function(c){return '<option>'+c+'</option>';}).join('');
+  s2.onchange = function(){buildVmapRows(id);};
+  var hint = document.createElement('span'); hint.textContent = 'value pairs'; hint.style.cssText = 'font-size:11px;color:#888';
+  colRow.appendChild(s1); colRow.appendChild(arrow); colRow.appendChild(s2); colRow.appendChild(hint);
+  var rmBtn = document.createElement('button'); rmBtn.className = 'rm-btn'; rmBtn.textContent = '×';
+  rmBtn.onclick = function(){document.getElementById(id).remove();};
+  hdr.appendChild(colRow); hdr.appendChild(rmBtn);
+
+  // Rows container
+  var rowsDiv = document.createElement('div'); rowsDiv.className = 'vmap-rows'; rowsDiv.style.cssText = 'padding:8px 12px';
+  rowsDiv.innerHTML = '<p style="font-size:11px;color:#aaa">Select columns above to map values.</p>';
+
+  d.appendChild(hdr); d.appendChild(rowsDiv);
+  document.getElementById('vmapList').appendChild(d);
+
+  // Auto-guess columns
+  var g1 = c1.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c1[0];
+  var g2 = c2.find(function(c){return c.toLowerCase()===g1.toLowerCase();})||
+    c2.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c2[0];
+  s1.value = g1; s2.value = g2;
+  buildVmapRows(id);
 }
 
-function addVF(n){
-  var id='vf'+n+'_'+(++vfC[n]);
-  var cx=getCols(n);
-  var div=document.createElement('div');
-  div.id=id;
-  div.style.cssText='display:grid;grid-template-columns:1fr 28px 1fr 26px;gap:4px;align-items:center;margin-bottom:5px';
-  var colSel=document.createElement('select'); colSel.className='vfc';
-  colSel.innerHTML='<option value="">— column —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
-  colSel.onchange=function(){updVFVals(n,id);};
-  var eq=document.createElement('span'); eq.textContent='='; eq.style.cssText='text-align:center;color:#ccc';
-  var valSel=document.createElement('select'); valSel.className='vfv';
-  valSel.innerHTML='<option value="">— value —</option>';
-  var rmBtn=document.createElement('button'); rmBtn.className='rm-btn'; rmBtn.textContent='×';
-  rmBtn.onclick=function(){document.getElementById(id).remove();};
-  div.appendChild(colSel); div.appendChild(eq); div.appendChild(valSel); div.appendChild(rmBtn);
-  document.getElementById('vflist'+n).appendChild(div);
+function buildVmapRows(id) {
+  var block = document.getElementById(id); if(!block) return;
+  var c1 = block.querySelector('.vmc1').value;
+  var c2 = block.querySelector('.vmc2').value;
+  if(!c1||!c2) return;
+  // Get unique values from each column
+  var vals1 = []; D[1].forEach(function(r){var v=String(r[c1]||'').trim();if(v&&vals1.indexOf(v)<0)vals1.push(v);});
+  var vals2 = []; D[2].forEach(function(r){var v=String(r[c2]||'').trim();if(v&&vals2.indexOf(v)<0)vals2.push(v);});
+  vals1.sort(); vals2.sort();
+  var v2opts = '<option value="">— same as F1 —</option>'+vals2.map(function(v){return '<option>'+v+'</option>';}).join('');
+  var n1 = SNAME[1], n2 = SNAME[2];
+  var html = '<table class="vmap-table"><thead><tr>'
+    + '<th>'+n1+' value ('+c1+')</th>'
+    + '<th>→</th>'
+    + '<th>'+n2+' equivalent ('+c2+')</th>'
+    + '</tr></thead><tbody>';
+  vals1.forEach(function(v){
+    // Auto-match: same value, or date-normalised equivalent
+    var autoMatch = '';
+    var pd1 = parseDt(v);
+    if(pd1) {
+      vals2.forEach(function(v2){var pd2=parseDt(v2);if(pd2&&pd2.m===pd1.m&&pd2.y===pd1.y)autoMatch=v2;});
+    } else {
+      if(vals2.indexOf(v)>=0) autoMatch=v;
+    }
+    var selOpts = '<option value="">— same as F1 —</option>'
+      +vals2.map(function(v2){return '<option'+(v2===autoMatch?' selected':'')+'>'+v2+'</option>';}).join('');
+    html += '<tr><td style="font-weight:500">'+v+'</td><td style="color:#ccc;text-align:center">→</td>'
+      +'<td><select class="vmr" data-f1="'+v+'">'+selOpts+'</select></td></tr>';
+  });
+  html += '</tbody></table>';
+  block.querySelector('.vmap-rows').innerHTML = html;
 }
 
-function updVFVals(n,id){
-  var row=document.getElementById(id); if(!row) return;
-  var col=row.querySelector('.vfc').value, sel=row.querySelector('.vfv'), cur=sel.value;
-  if(!col){sel.innerHTML='<option value="">— value —</option>';return;}
-  sel.innerHTML='<option value="">— value —</option>'+uniqueVals(n,col).map(function(v){return '<option'+(v===cur?' selected':'')+'>'+v+'</option>';}).join('');
-}
-
-function getVFs(n){
-  return Array.from(document.getElementById('vflist'+n).querySelectorAll('[id^="vf'+n+'_"]')).map(function(row){
-    return {col:row.querySelector('.vfc').value, val:row.querySelector('.vfv').value};
-  }).filter(function(f){return f.col&&f.val;});
-}
-
-function applyVFs(data,vfs){
-  if(!vfs.length) return data;
-  return data.filter(function(r){return vfs.every(function(f){return String(r[f.col]||'').trim()===f.val;});});
-}
-
-// ══════════════════════════════════════════════
-//  ROW FILTERS
-// ══════════════════════════════════════════════
-function addRowFilter(n){
-  var id='rf'+n+'_'+(++fcC[n]);
-  var ops=['=','!=','contains','starts with','>','<','>=','<='].map(function(o){return '<option>'+o+'</option>';}).join('');
-  var div=document.createElement('div'); div.className='fr-row'; div.id=id;
-  div.innerHTML='<select class="fc" onchange="updRFV('+n+',\''+id+'\')">'+getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('')+'</select>'
-    +'<select class="fo" onchange="updRFV('+n+',\''+id+'\')">'+ops+'</select>'
-    +'<select class="fv"><option value="">— select —</option></select>'
-    +'<button class="rm-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
-  document.getElementById('flist'+n).appendChild(div);
-  updRFV(n,id);
-}
-
-function updRFV(n,id){
-  var row=document.getElementById(id); if(!row) return;
-  var col=row.querySelector('.fc').value, op=row.querySelector('.fo').value, ve=row.querySelector('.fv'), cur=ve.value;
-  var isNum=['>', '<', '>=', '<='].indexOf(op)>=0, vals=uniqueVals(n,col);
-  if(isNum||!vals.length){
-    if(ve.tagName!=='INPUT'){var i=document.createElement('input');i.className='fv';i.type='text';i.placeholder='value';i.value=cur;ve.replaceWith(i);}
-  } else {
-    var opts='<option value="">— select —</option>'+vals.map(function(v){return '<option'+(v===cur?' selected':'')+'>'+v+'</option>';}).join('');
-    if(ve.tagName==='SELECT') ve.innerHTML=opts;
-    else{var s=document.createElement('select');s.className='fv';s.innerHTML=opts;ve.replaceWith(s);}
-  }
-}
-
-function getRowFilters(n){
-  return Array.from(document.getElementById('flist'+n).querySelectorAll('.fr-row')).map(function(r){
-    return {col:r.querySelector('.fc').value,op:r.querySelector('.fo').value,val:r.querySelector('.fv').value};
-  }).filter(function(f){return f.val!==''&&f.val!=null;});
-}
-
-function applyFilters(data,filters){
-  if(!filters.length) return data;
-  return data.filter(function(row){
-    return filters.every(function(f){
-      var cell=String(row[f.col]||'').toLowerCase(), v=f.val.toLowerCase();
-      if(f.op==='=') return cell===v; if(f.op==='!=') return cell!==v;
-      if(f.op==='contains') return cell.indexOf(v)>=0; if(f.op==='starts with') return cell.indexOf(v)===0;
-      var cv=parseFloat(cell),fv=parseFloat(v);
-      if(f.op==='>') return cv>fv; if(f.op==='<') return cv<fv;
-      if(f.op==='>=') return cv>=fv; if(f.op==='<=') return cv<=fv;
-      return true;
+function getVmaps() {
+  // Returns array of {f1col, f2col, map: {f1val: f2val}}
+  return Array.from(document.querySelectorAll('.vmap-block')).map(function(block){
+    var f1col = block.querySelector('.vmc1').value;
+    var f2col = block.querySelector('.vmc2').value;
+    var map = {};
+    block.querySelectorAll('.vmr').forEach(function(sel){
+      if(sel.value) map[sel.dataset.f1] = sel.value;
     });
+    return {f1col:f1col, f2col:f2col, map:map};
+  }).filter(function(vm){return vm.f1col && vm.f2col;});
+}
+
+function applyVmaps(data, vmaps, side) {
+  // side=1 or side=2: apply mapping to convert File 2 values to File 1 equivalents
+  if(!vmaps.length) return data;
+  return data.map(function(row){
+    var r = Object.assign({}, row);
+    vmaps.forEach(function(vm){
+      var col = side===1 ? vm.f1col : vm.f2col;
+      if(side===2 && col && vm.map) {
+        var curVal = String(r[col]||'').trim();
+        // Build reverse map: f2val → f1val
+        var revMap = {};
+        Object.keys(vm.map).forEach(function(f1v){revMap[vm.map[f1v]]=f1v;});
+        if(revMap[curVal]) r[col] = revMap[curVal]; // normalise F2 value to F1 equivalent
+      }
+    });
+    return r;
   });
 }
 
-// ══════════════════════════════════════════════
-//  NORMALISE
-// ══════════════════════════════════════════════
+// ── NORMALISE ──
 function normKey(val,type){
   var s=String(val||'').trim();
   if(type==='num') return String(parseFloat(s.replace(/,/g,''))||0);
@@ -790,32 +878,28 @@ function normKey(val,type){
 }
 function toNum(v){return parseFloat(String(v||'').replace(/,/g,''))||0;}
 
-// ══════════════════════════════════════════════
-//  BUILD PIVOT SIDE
-// ══════════════════════════════════════════════
-function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol){
+// ── BUILD PIVOT SIDE ──
+function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,vfCol,vfVal,colNorm) {
   var cells={}, cnts={}, src={}, rowKeys=[];
+  var fd=(vfCol&&vfVal)?data.filter(function(r){return String(r[vfCol]||'').trim()===vfVal.trim();}):data;
 
   function agg(c,ct,lbl,v){
-    if(aggType==='count')    c[lbl]=(c[lbl]||0)+1;
-    else if(aggType==='sum') c[lbl]=(c[lbl]||0)+v;
+    if(aggType==='count')   c[lbl]=(c[lbl]||0)+1;
+    else if(aggType==='sum')c[lbl]=(c[lbl]||0)+v;
     else if(aggType==='avg'){c[lbl]=(c[lbl]||0)+v;ct[lbl]=(ct[lbl]||0)+1;}
-    else if(aggType==='min') c[lbl]=c[lbl]===undefined?v:Math.min(c[lbl],v);
-    else if(aggType==='max') c[lbl]=c[lbl]===undefined?v:Math.max(c[lbl],v);
+    else if(aggType==='min')c[lbl]=c[lbl]===undefined?v:Math.min(c[lbl],v);
+    else if(aggType==='max')c[lbl]=c[lbl]===undefined?v:Math.max(c[lbl],v);
   }
 
-  var colNorm=document.getElementById('colnorm').value||'date';
-
-  if(srcType==='long'){
-    // Long format: period values in periodCol, amounts in valueCol
+  if (srcType==='values') {
+    // Long format: periodCol has period values, valueCol has amounts
     var pMap={};
-    pairs.forEach(function(p){pMap[p.normVal]=p;});
-    data.forEach(function(row){
+    pairs.forEach(function(p){pMap[p.normVal]=p.label;});
+    fd.forEach(function(row){
       var rk=normKey(row[rowCol],rowNorm); if(!rk||!periodCol) return;
       var rawP=row[periodCol]; if(rawP==null||rawP==='') return;
       var nv=normPd(String(rawP),colNorm)||String(rawP).trim().toLowerCase();
-      var pair=pMap[nv]; if(!pair) return;
-      var lbl=pair.label;
+      var lbl=pMap[nv]; if(!lbl) return;
       var v=valueCol?toNum(row[valueCol]):1;
       if(rowKeys.indexOf(rk)<0) rowKeys.push(rk);
       if(!cells[rk]){cells[rk]={};cnts[rk]={};src[rk]={};}
@@ -824,13 +908,13 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol)
       agg(cells[rk],cnts[rk],lbl,v);
     });
   } else {
-    // Wide format: column name IS the period, cell value IS the amount
-    data.forEach(function(row){
+    // Wide/header format: col name IS the period, cell value IS the amount
+    fd.forEach(function(row){
       var rk=normKey(row[rowCol],rowNorm); if(!rk) return;
       if(rowKeys.indexOf(rk)<0) rowKeys.push(rk);
       if(!cells[rk]){cells[rk]={};cnts[rk]={};src[rk]={};}
       pairs.forEach(function(p){
-        var rawVal=row[p.colInFile];
+        var rawVal=row[p.colInFile]; // colInFile set per-side in runRecon
         if(rawVal===undefined||rawVal==='') return;
         var v=toNum(rawVal);
         if(!src[rk][p.label])src[rk][p.label]=[];
@@ -840,19 +924,19 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol)
     });
   }
 
-  if(aggType==='avg'){
+  // Finalise averages
+  if(aggType==='avg') {
     Object.keys(cells).forEach(function(rk){
       Object.keys(cells[rk]).forEach(function(lbl){if(cnts[rk][lbl])cells[rk][lbl]/=cnts[rk][lbl];});
     });
   }
+
   rowKeys.sort(function(a,b){return a.localeCompare(b,undefined,{numeric:true});});
   return {cells:cells,src:src,rowKeys:rowKeys};
 }
 
-// ══════════════════════════════════════════════
-//  RUN RECON
-// ══════════════════════════════════════════════
-function runRecon(){
+// ── RUN RECON ──
+function runRecon() {
   var pairs=getPairs();
   if(!pairs.length){alert('Add at least one column pair.');return;}
 
@@ -862,28 +946,49 @@ function runRecon(){
   var agg1=document.getElementById('agg1').value;
   var agg2=document.getElementById('agg2').value;
   var tol=parseFloat(document.getElementById('tol').value)||0.01;
-  var lbl1=document.getElementById('lbl1').value||SNAME[1];
-  var lbl2=document.getElementById('lbl2').value||SNAME[2];
+  var lbl1=document.getElementById('lbl1').value||'File 1';
+  var lbl2=document.getElementById('lbl2').value||'File 2';
   var amt1=document.getElementById('amt1').value;
   var amt2=document.getElementById('amt2').value;
+  // Multiple value filters — applied inside buildSide via applyVFs
+  var vfc1='', vfv1='', vfc2='', vfv2=''; // legacy vars kept for compat
+  var colNorm=document.getElementById('colnorm').value||'date';
   var si=getSrcInfo();
 
   META={rowCol1:rowCol1,rowCol2:rowCol2,rowNorm:rowNorm,agg1:agg1,agg2:agg2,
-    tol:tol,lbl1:lbl1,lbl2:lbl2,pairs:pairs,si:si,amt1:amt1,amt2:amt2};
+    tol:tol,lbl1:lbl1,lbl2:lbl2,pairs:pairs,colNorm:colNorm,si:si,amt1:amt1,amt2:amt2};
 
-  // Apply value filters
-  var fd1=applyVFs(applyFilters(D[1],getRowFilters(1)),getVFs(1));
-  var fd2=applyVFs(applyFilters(D[2],getRowFilters(2)),getVFs(2));
+  // Validate: if header mode and column not in File 2, warn
+  var fd2check=applyFilters(D[2],getRowFilters(2));
+  if(si.f2src==='header'&&fd2check.length>0){
+    var f2cols=Object.keys(fd2check[0]||{});
+    var missing=pairs.filter(function(p){return f2cols.indexOf(p.f2col)<0;});
+    if(missing.length){
+      var go=confirm(missing.length+' value(s) not found as column headers in '+SNAME[2]+': '+missing.map(function(p){return p.f2col;}).join(', ')
+        +'\n\nMake sure the correct column is selected for '+SNAME[2]+' in the Columns section.'
+        +'\n\nRun anyway?');
+      if(!go) return;
+    }
+  }
 
-  // Tag pairs with the correct column name per side
-  var p1pairs=pairs.map(function(p){return {f1col:p.f1col,f2col:p.f2col,label:p.label,normVal:p.normVal,colInFile:p.f1col};});
-  var p2pairs=pairs.map(function(p){return {f1col:p.f1col,f2col:p.f2col,label:p.label,normVal:p.normVal,colInFile:p.f2col};});
+  // Tag each pair with the correct column name per side
+  var p1pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f1col});});
+  var p2pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f2col});});
 
-  var p1=buildSide(fd1,rowCol1,rowNorm,p1pairs,agg1,si.f1src,si.f1pcol,si.f1vcol||amt1);
-  var p2=buildSide(fd2,rowCol2,rowNorm,p2pairs,agg2,si.f2src,si.f2pcol,si.f2vcol||amt2);
+  var fd1=applyFilters(D[1],getRowFilters(1));
+  var fd2=applyFilters(D[2],getRowFilters(2));
 
-  var allRowsObj={}; p1.rowKeys.forEach(function(r){allRowsObj[r]=1;}); p2.rowKeys.forEach(function(r){allRowsObj[r]=1;});
-  var allRows=Object.keys(allRowsObj).sort(function(a,b){return a.localeCompare(b,undefined,{numeric:true});});
+  // Apply value filters before building pivot
+  var vfFilters1=getVFs(1), vfFilters2=getVFs(2);
+  var fvd1=applyVFs(fd1,vfFilters1), fvd2=applyVFs(fd2,vfFilters2);
+  // Apply column value mappings (normalise File 2 values to File 1 equivalents)
+  var vmaps=getVmaps();
+  var ffd1=applyVmaps(fvd1,vmaps,1), ffd2=applyVmaps(fvd2,vmaps,2);
+  var p1=buildSide(ffd1,rowCol1,rowNorm,p1pairs,agg1,si.f1src,si.f1pcol,si.f1vcol||amt1,'','',colNorm);
+  var p2=buildSide(ffd2,rowCol2,rowNorm,p2pairs,agg2,si.f2src,si.f2pcol,si.f2vcol||amt2,'','',colNorm);
+
+  var allRows=Object.keys(Object.assign({},p1.cells,p2.cells));
+  allRows.sort(function(a,b){return a.localeCompare(b,undefined,{numeric:true});});
 
   PR={p1:p1,p2:p2,allRows:allRows,pairs:pairs};
   selRows=new Set(allRows);
@@ -896,10 +1001,8 @@ function runRecon(){
   goStep(3);
 }
 
-// ══════════════════════════════════════════════
-//  SLICERS
-// ══════════════════════════════════════════════
-function buildSlicers(allRows,pairs){
+// ── SLICERS ──
+function buildSlicers(allRows,pairs) {
   document.getElementById('rowSlicerTitle').textContent=META.rowCol1===META.rowCol2?META.rowCol1:META.rowCol1+' / '+META.rowCol2;
   document.getElementById('rowSlicer').innerHTML=allRows.map(function(rk){
     var chk=selRows.has(rk);
@@ -912,14 +1015,12 @@ function buildSlicers(allRows,pairs){
       +'<input type="checkbox" '+(chk?'checked':'')+' style="pointer-events:none"> '+p.label+'</button>';
   }).join('');
 }
-
 function togSlicer(type,val,btn){
   var s=type==='row'?selRows:selCols, chk=btn.querySelector('input'), ns=!chk.checked;
   chk.checked=ns; ns?s.add(val):s.delete(val);
   btn.className='slicer-item'+(ns?'':' unchecked');
   renderPivot();
 }
-
 function slicerAll(type,checked){
   var s=type==='row'?selRows:selCols, lid=type==='row'?'rowSlicer':'colSlicer';
   if(checked){if(type==='row')PR.allRows.forEach(function(r){s.add(r);});else(META.pairs||[]).forEach(function(p){s.add(p.label);});}
@@ -927,21 +1028,14 @@ function slicerAll(type,checked){
   document.querySelectorAll('#'+lid+' .slicer-item').forEach(function(el){el.className='slicer-item'+(checked?'':' unchecked');el.querySelector('input').checked=checked;});
   renderPivot();
 }
-
 function slicerSearch(type,q){
   var id=type==='row'?'rowSlicer':'colSlicer';
   document.querySelectorAll('#'+id+' .slicer-item').forEach(function(el){el.style.display=el.textContent.trim().toLowerCase().indexOf(q.toLowerCase())>=0?'':'none';});
 }
 
-// ══════════════════════════════════════════════
-//  RENDER PIVOT
-// ══════════════════════════════════════════════
+// ── RENDER ──
 function fmt(n){if(n==null)return'—';return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-
-function sid(rk){
-  try{return btoa(unescape(encodeURIComponent(rk))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);}
-  catch(e){return'r'+(Math.random()+'').slice(2,10);}
-}
+function sid(rk){try{return btoa(unescape(encodeURIComponent(rk))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);}catch(e){return'r'+(Math.random()+'').slice(2,10);}}
 
 function setView(type,btn){
   document.querySelectorAll('.toolbar .btn').forEach(function(b){b.classList.remove('active');});
@@ -963,7 +1057,6 @@ function renderPivot(){
     ?sRows.filter(function(rk){return aPairs.some(function(p){return (p1.cells[rk]&&p1.cells[rk][p.label])==null||(p2.cells[rk]&&p2.cells[rk][p.label])==null;});})
     :sRows;
 
-  // Header
   var kh='<th class="row-hdr" rowspan="2">'+(META.rowCol1===META.rowCol2?META.rowCol1:META.rowCol1+' / '+META.rowCol2)+'</th>';
   var html='<thead><tr>'+kh;
   aPairs.forEach(function(p){html+='<th colspan="3" style="text-align:center;border-left:2px solid #ddd">'+p.label+'</th>';});
@@ -973,7 +1066,7 @@ function renderPivot(){
   var tc=aPairs.length*3+4;
 
   showRows.forEach(function(rk){
-    var s=sid(rk), t1=0,t2=0;
+    var s=sid(rk), t1=0, t2=0;
     aPairs.forEach(function(p){t1+=(p1.cells[rk]&&p1.cells[rk][p.label])||0;t2+=(p2.cells[rk]&&p2.cells[rk][p.label])||0;});
     var td=t1-t2;
     html+='<tr id="pr_'+s+'"><td class="row-key" onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\')">'
@@ -984,7 +1077,7 @@ function renderPivot(){
       var dc='',dt='';
       if(v1==null||v2==null){dc='cell-miss';dt='—';ms++;}
       else{var d=v1-v2;if(Math.abs(d)<=tol){dc='cell-match cell-zero';dt='✓';mc++;}else{dc='cell-break';dt=fmt(d);bc++;}}
-      var click=(dc.indexOf('break')>=0||dc.indexOf('miss')>=0)?'onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\')\"':'';
+      var click=dc.indexOf('break')>=0||dc.indexOf('miss')>=0?'onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\')"':'';
       html+='<td style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td><td>'+(v2!=null?fmt(v2):'—')+'</td>';
       html+='<td class="'+dc+'" '+click+'>'+dt+'</td>';
     });
@@ -994,8 +1087,8 @@ function renderPivot(){
   });
 
   // Grand total
-  var gt1=0,gt2=0;
   html+='<tr class="grand-row"><td class="row-key">Grand Total</td>';
+  var gt1=0,gt2=0;
   aPairs.forEach(function(p){
     var ct1=0,ct2=0;
     showRows.forEach(function(rk){ct1+=(p1.cells[rk]&&p1.cells[rk][p.label])||0;ct2+=(p2.cells[rk]&&p2.cells[rk][p.label])||0;});
@@ -1018,21 +1111,20 @@ function renderPivot(){
   document.getElementById('rcount').textContent=showRows.length+' of '+allRows.length+' rows shown';
 }
 
-// ══════════════════════════════════════════════
-//  DRILL DOWN
-// ══════════════════════════════════════════════
+// ── DRILL DOWN ──
 function togDrill(rk){
-  var s=sid(rk),dr=document.getElementById('drill_'+s); if(!dr) return;
+  var s=sid(rk), dr=document.getElementById('drill_'+s); if(!dr) return;
   var isOpen=dr.style.display!=='none';
   if(openDrill&&openDrill!==s){
     var prev=document.getElementById('drill_'+openDrill);if(prev)prev.style.display='none';
     var pp=document.getElementById('pr_'+openDrill);if(pp){var a=pp.querySelector('.da');if(a)a.textContent='▶';}
   }
   if(isOpen){dr.style.display='none';openDrill=null;var pr=document.getElementById('pr_'+s);if(pr){var a=pr.querySelector('.da');if(a)a.textContent='▶';}return;}
-  openDrill=s; buildDrill(rk,s); dr.style.display='';
+  openDrill=s;
+  buildDrill(rk,s);
+  dr.style.display='';
   var pr=document.getElementById('pr_'+s);if(pr){var a=pr.querySelector('.da');if(a)a.textContent='▼';}
 }
-
 function buildDrill(rk,s){
   var el=document.getElementById('dc_'+s); if(!el) return;
   var p1=PR.p1,p2=PR.p2,pairs=META.pairs||[];
@@ -1052,9 +1144,7 @@ function buildDrill(rk,s){
   el.innerHTML=mkT(p1.src,META.lbl1,META.amt1)+mkT(p2.src,META.lbl2,META.amt2);
 }
 
-// ══════════════════════════════════════════════
-//  EMAIL DRAFT
-// ══════════════════════════════════════════════
+// ── EMAIL ──
 function draftEmail(){
   if(!PR) return;
   var p1=PR.p1,p2=PR.p2,allRows=PR.allRows,pairs=META.pairs,tol=META.tol,lbl1=META.lbl1,lbl2=META.lbl2;
@@ -1077,19 +1167,17 @@ function draftEmail(){
     }
   }}
   var subj='[Recon] '+lbl1+' vs '+lbl2+' — '+today+' — '+status;
-  var body='Hi,\n\nReconciliation summary for '+lbl1+' vs '+lbl2+' as at '+today+'.\n\n'
-    +'SUMMARY\n-------\nStatus:         '+status+'\nMatched cells:  '+mc+'\nBreaks:         '+bc
-    +'\nMissing:        '+ms+'\n'+lbl1+' Total:  '+fmt(gt1)+'\n'+lbl2+' Total:  '+fmt(gt2)+'\nDifference:     '+fmt(gd)
-    +'\n\n'+(bc>0?'BREAK DETAILS\n-------------\n'+blines:'No breaks — reconciliation is clear.')
-    +'\n\nPlease review the attached CSV for full detail.\n\nRegards';
+  var body='Hi,\n\nPlease find below the reconciliation summary for '+lbl1+' vs '+lbl2+' as at '+today+'.\n\n'
+    +'SUMMARY\n-------\nStatus:         '+status+'\nMatched cells:  '+mc+'\nBreaks:         '+bc+'\nMissing:        '+ms
+    +'\n'+lbl1+' Total:  '+fmt(gt1)+'\n'+lbl2+' Total:  '+fmt(gt2)+'\nDifference:     '+fmt(gd)
+    +'\n\n'+(bc>0?'BREAK DETAILS\n-------------\n'+blines:'No breaks. Reconciliation is clear.')
+    +'\n\nPlease review the attached export for full detail.\n\nRegards';
   var a=document.createElement('a');
   a.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
   a.click();
 }
 
-// ══════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════
+// ── EXPORT CSV ──
 function exportCSV(){
   if(!PR) return;
   var p1=PR.p1,p2=PR.p2,allRows=PR.allRows,pairs=META.pairs,tol=META.tol,lbl1=META.lbl1,lbl2=META.lbl2;
@@ -1098,13 +1186,14 @@ function exportCSV(){
   hdr.push('Total '+lbl1,'Total '+lbl2,'Total Diff','Status');
   var rows=[hdr];
   allRows.forEach(function(rk){
-    var row=[rk],t1=0,t2=0;
+    var row=[rk]; var t1=0,t2=0;
     pairs.forEach(function(p){
       var v1=p1.cells[rk]&&p1.cells[rk][p.label]!=null?p1.cells[rk][p.label]:null;
       var v2=p2.cells[rk]&&p2.cells[rk][p.label]!=null?p2.cells[rk][p.label]:null;
       if(v1!=null)t1+=v1;if(v2!=null)t2+=v2;
       var d=v1!=null&&v2!=null?v1-v2:null;
-      row.push(v1!=null?v1:'',v2!=null?v2:'',d!=null?d.toFixed(2):'',v1==null||v2==null?'Missing':Math.abs(d)<=tol?'Match':'Break');
+      var s=v1==null||v2==null?'Missing':Math.abs(d)<=tol?'Match':'Break';
+      row.push(v1!=null?v1:'',v2!=null?v2:'',d!=null?d.toFixed(2):'',s);
     });
     var td=t1-t2;
     row.push(t1.toFixed(2),t2.toFixed(2),td.toFixed(2),Math.abs(td)<=tol?'Match':'Break');
@@ -1117,18 +1206,18 @@ function exportCSV(){
   a.click();
 }
 
-// ══════════════════════════════════════════════
-//  RESET
-// ══════════════════════════════════════════════
+// ── RESET ──
 function resetAll(){
   D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;
   curView='all';openDrill=null;selRows=new Set();selCols=new Set();
-  SNAME={1:'File 1',2:'File 2'};
   document.getElementById('s1btn').disabled=true;
   document.getElementById('pairList').innerHTML='';
   document.getElementById('lbl1').value='';document.getElementById('lbl2').value='';
-  ['vflist1','vflist2','flist1','flist2'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
-  vfC={1:0,2:0}; fcC={1:0,2:0};
+  SNAME={1:'File 1',2:'File 2'};
+  document.querySelectorAll('.sname-1').forEach(function(el){el.textContent='File 1';});
+  document.querySelectorAll('.sname-2').forEach(function(el){el.textContent='File 2';});
+  ['vflist1','vflist2','flist1','flist2','vmapList'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  vfC={1:0,2:0}; vmapC=0;
   [1,2].forEach(function(n){
     document.getElementById('zone'+n).classList.remove('loaded');
     document.getElementById('z'+n+'t').textContent='Click or drag file here';
@@ -1136,7 +1225,6 @@ function resetAll(){
     document.getElementById('st'+n).innerHTML='';
     document.getElementById('si'+n).textContent='';
   });
-  updateAllLabels();
 }
 </script>
 </body>

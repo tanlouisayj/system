@@ -4,108 +4,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reconciliation Checker v5</title>
+<title>Pivot Reconciliation Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
-.header{background:#fff;border-bottom:1px solid #e0e0e0;padding:1rem 2rem;display:flex;align-items:center;gap:12px}
-.header h1{font-size:16px;font-weight:600}
-.badge{font-size:12px;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:4px}
-.container{max-width:980px;margin:2rem auto;padding:0 1.5rem}
-.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:1.5rem;margin-bottom:1rem}
-.step{display:none}.step.active{display:block}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-label,span.lbl{display:block;font-size:12px;color:#666;margin-bottom:4px}
-.slbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;display:block;margin-bottom:8px}
-input[type=text],input[type=number],select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a}
-input:focus,select:focus{outline:none;border-color:#555}
-.upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
-.upload-zone:hover,.upload-zone.drag{background:#f8f8f8;border-color:#999}
-.upload-zone.loaded{border-color:#2d7a4f;background:#f0faf4}
-.upload-zone input{display:none}
-.btn{padding:8px 18px;border:1px solid #ccc;border-radius:6px;background:#fff;font-size:13px;font-family:inherit;cursor:pointer;transition:background .15s;color:#1a1a1a}
-.btn:hover{background:#f5f5f5}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.btn-primary:hover{background:#333}
-.btn-sm{padding:5px 12px;font-size:12px}
-.sheet-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.sheet-tab{padding:5px 12px;font-size:12px;border:1px solid #ddd;border-radius:20px;cursor:pointer;background:#f8f8f8;transition:all .15s;white-space:nowrap}
-.sheet-tab:hover{border-color:#999;background:#f0f0f0}
-.sheet-tab.selected{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.sheet-info{font-size:12px;color:#2d7a4f;margin-top:6px;font-weight:500}
-.stat{background:#f8f8f8;border-radius:8px;padding:1rem;text-align:center}
-.stat-n{font-size:24px;font-weight:600}.stat-l{font-size:12px;color:#888;margin-top:2px}
-.stat.green .stat-n{color:#2d7a4f}.stat.red .stat-n{color:#c0392b}.stat.amber .stat-n{color:#b7770d}
-.map-row{display:grid;grid-template-columns:1fr 32px 1fr 100px 32px;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:6px;background:#f8f8f8}
-.map-row.confirmed{border-color:#2d7a4f;background:#f0faf4}
-.map-row select{font-size:12px}
-.conf{font-size:14px;text-align:center}
-.conf.high{color:#2d7a4f}.conf.med{color:#b7770d}.conf.low{color:#c0392b}
-.fr-row{display:grid;grid-template-columns:1fr 90px 1fr 30px;gap:6px;align-items:center;margin-bottom:6px}
-.fr-row select,.fr-row input{font-size:12px}
-.rm-btn{width:30px;height:30px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:16px;color:#999;display:flex;align-items:center;justify-content:center;padding:0}
-.rm-btn:hover{background:#fee;color:#c0392b;border-color:#f5c6c6}
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
-.filter-bar .btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.tbl-wrap{border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:9px 12px;background:#f8f8f8;border-bottom:1px solid #e0e0e0;font-weight:600;font-size:11px;color:#555;white-space:nowrap}
-td{padding:7px 12px;border-bottom:1px solid #f0f0f0;color:#1a1a1a}
-tr:last-child td{border-bottom:none}
-tr.break-row{background:#fff8f8}tr.miss-row{background:#fffbf0}
-.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:500;font-family:-apple-system,sans-serif}
-.tag-green{background:#e8f5ee;color:#2d7a4f}.tag-red{background:#fdecea;color:#c0392b}.tag-amber{background:#fef6e4;color:#b7770d}
-.expand-btn{padding:3px 8px;font-size:11px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer}
-.expand-btn:hover{background:#f5f5f5}
-.drill-panel{background:#fafafa;border-top:1px solid #e0e0e0;padding:12px 12px 4px}
-.drill-panel p.dlbl{font-size:11px;font-weight:600;color:#555;margin-bottom:4px}
-.drill-tbl-wrap{overflow-x:auto;border:1px solid #e0e0e0;border-radius:6px;margin-bottom:10px}
-.drill-tbl-wrap table{font-size:11px}
-.drill-tbl-wrap th{font-size:10px;padding:5px 8px}
-.drill-tbl-wrap td{padding:4px 8px;font-family:'Courier New',monospace;font-size:11px;border-bottom:1px solid #f5f5f5}
-.actions{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
-.footer{text-align:center;padding:2rem;font-size:12px;color:#aaa}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+
+.header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 1rem 2rem; display: flex; align-items: center; gap: 12px; }
+.header h1 { font-size: 16px; font-weight: 600; }
+.badge { font-size: 12px; color: #888; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; }
+
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+.card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; }
+.step { display: none; } .step.active { display: block; }
+
+.slbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; display: block; margin-bottom: 8px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+
+input[type=text], input[type=number], select {
+width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;
+font-size: 13px; font-family: inherit; background: #fff; color: #1a1a1a;
+}
+input:focus, select:focus { outline: none; border-color: #555; }
+
+.upload-zone { border: 1.5px dashed #ccc; border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: background .15s, border-color .15s; }
+.upload-zone:hover, .upload-zone.drag { background: #f8f8f8; border-color: #999; }
+.upload-zone.loaded { border-color: #2d7a4f; background: #f0faf4; }
+.upload-zone input { display: none; }
+
+.btn { padding: 8px 18px; border: 1px solid #ccc; border-radius: 6px; background: #fff; font-size: 13px; font-family: inherit; cursor: pointer; transition: background .15s; color: #1a1a1a; }
+.btn:hover { background: #f5f5f5; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.btn-primary:hover { background: #333; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { color: #c0392b; border-color: #e0b0b0; }
+
+.sheet-picker { margin-top: 10px; padding: 10px 12px; background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; }
+.sheet-picker p { font-size: 12px; color: #666; margin-bottom: 8px; }
+.sheet-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sheet-tab { padding: 4px 12px; font-size: 12px; border: 1px solid #ccc; border-radius: 20px; cursor: pointer; background: #fff; transition: all .15s; white-space: nowrap; font-family: inherit; }
+.sheet-tab:hover { border-color: #555; background: #f0f0f0; }
+.sheet-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.sheet-info { font-size: 12px; color: #2d7a4f; margin-top: 8px; font-weight: 500; }
+
+.dim-row { display: grid; grid-template-columns: 1fr 30px 1fr 110px; gap: 8px; align-items: center; }
+.dim-row label { margin: 0; font-size: 12px; color: #666; }
+.dim-arrow { text-align: center; font-size: 16px; color: #ccc; padding-top: 18px; }
+
+.fr-row { display: grid; grid-template-columns: 1fr 90px 1fr 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
+.fr-row select, .fr-row input { font-size: 12px; }
+.rm-btn { width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 16px; color: #999; display: flex; align-items: center; justify-content: center; padding: 0; }
+.rm-btn:hover { background: #fee; color: #c0392b; border-color: #f5c6c6; }
+
+/* Pivot table */
+.pivot-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
+.pivot-table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.pivot-table th { padding: 8px 10px; background: #f8f8f8; border: 1px solid #e0e0e0; font-weight: 600; font-size: 11px; color: #555; text-align: center; }
+.pivot-table th.row-hdr { text-align: left; position: sticky; left: 0; z-index: 2; background: #f8f8f8; min-width: 120px; }
+.pivot-table td { padding: 6px 10px; border: 1px solid #f0f0f0; text-align: right; font-family: ‘Courier New’, monospace; font-size: 11px; }
+.pivot-table td.row-key { text-align: left; font-family: inherit; font-weight: 500; position: sticky; left: 0; z-index: 1; background: #fff; border-right: 1px solid #e0e0e0; }
+.pivot-table tr:hover td { background: #fafafa; }
+.pivot-table tr:hover td.row-key { background: #fafafa; }
+
+.cell-match { color: #2d7a4f; }
+.cell-break { color: #c0392b; font-weight: 600; background: #fff5f5 !important; }
+.cell-miss { color: #b7770d; background: #fffbf0 !important; }
+.cell-zero { color: #aaa; }
+.col-total { background: #f0f0f0 !important; font-weight: 600; border-left: 2px solid #ccc !important; }
+.col-total.cell-break { background: #fdecea !important; }
+
+.drill-row { display: none; }
+.drill-row td { padding: 0; background: #fff !important; }
+.drill-panel { padding: 12px; background: #fafafa; border-top: 1px solid #e0e0e0; overflow-x: auto; }
+.drill-panel p.dlbl { font-size: 11px; font-weight: 600; color: #555; margin-bottom: 4px; font-family: inherit; }
+.drill-tbl-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; }
+.drill-tbl-wrap table { font-size: 11px; border-collapse: collapse; }
+.drill-tbl-wrap th { font-size: 10px; padding: 5px 8px; background: #f8f8f8; border-bottom: 1px solid #e0e0e0; text-align: left; font-weight: 600; color: #555; }
+.drill-tbl-wrap td { padding: 4px 8px; font-family: ‘Courier New’, monospace; font-size: 11px; border-bottom: 1px solid #f5f5f5; }
+
+.stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
+.stat { background: #f8f8f8; border-radius: 8px; padding: 1rem; text-align: center; }
+.stat-n { font-size: 22px; font-weight: 600; }
+.stat-l { font-size: 11px; color: #888; margin-top: 2px; }
+.stat.green .stat-n { color: #2d7a4f; }
+.stat.red .stat-n { color: #c0392b; }
+.stat.amber .stat-n { color: #b7770d; }
+
+.actions { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 8px; }
+.actions-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+
+.footer { text-align: center; padding: 2rem; font-size: 12px; color: #aaa; }
+code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3px; }
 </style>
+
 </head>
 <body>
+
 <div class="header">
-  <h1>Reconciliation Checker</h1>
-  <span class="badge">v5 — multi-sheet + smart matching + drill-down</span>
+  <h1>Pivot Reconciliation Tool</h1>
+  <span class="badge">Rows + Columns + Values like a pivot table</span>
 </div>
+
 <div class="container">
 
-<!-- STEP 1: UPLOAD + SHEET SELECTION -->
+<!-- ═══ STEP 1: UPLOAD ═══ -->
 
 <div id="step1" class="step active">
   <div class="card">
     <span class="slbl">Step 1 — Upload files & select sheets</span>
-    <p style="font-size:13px;color:#666;margin-bottom:1rem">If your workbook has multiple tabs, click the sheet you want to use after uploading.</p>
+    <p style="font-size:13px;color:#666;margin-bottom:1rem">If a workbook has multiple tabs, select which sheet to use after uploading.</p>
     <div class="grid2">
       <div>
-        <span class="lbl" style="font-weight:600;font-size:13px;margin-bottom:8px">File 1 — Source</span>
+        <label style="font-weight:600;font-size:13px;margin-bottom:8px;display:block">File 1 — Source</label>
         <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()" ondragover="ev(event,'zone1')" ondragleave="uv('zone1')" ondrop="dp(event,1)">
           <input type="file" id="f1" accept=".xlsx,.xls,.csv" onchange="lf(1,this)">
           <p style="font-size:13px;color:#666" id="z1t">Click or drag file here</p>
           <p style="font-size:11px;color:#aaa;margin-top:4px">Excel or CSV</p>
         </div>
-        <div id="sheets1" style="display:none;margin-top:10px">
-          <p style="font-size:12px;color:#666;margin-bottom:6px">Select sheet:</p>
+        <div id="sheetpicker1" class="sheet-picker" style="display:none">
+          <p>Multiple sheets found — select one:</p>
           <div class="sheet-tabs" id="stabs1"></div>
           <p class="sheet-info" id="sinfo1"></p>
         </div>
       </div>
       <div>
-        <span class="lbl" style="font-weight:600;font-size:13px;margin-bottom:8px">File 2 — Comparison</span>
+        <label style="font-weight:600;font-size:13px;margin-bottom:8px;display:block">File 2 — Comparison</label>
         <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()" ondragover="ev(event,'zone2')" ondragleave="uv('zone2')" ondrop="dp(event,2)">
           <input type="file" id="f2" accept=".xlsx,.xls,.csv" onchange="lf(2,this)">
           <p style="font-size:13px;color:#666" id="z2t">Click or drag file here</p>
           <p style="font-size:11px;color:#aaa;margin-top:4px">Excel or CSV</p>
         </div>
-        <div id="sheets2" style="display:none;margin-top:10px">
-          <p style="font-size:12px;color:#666;margin-bottom:6px">Select sheet:</p>
+        <div id="sheetpicker2" class="sheet-picker" style="display:none">
+          <p>Multiple sheets found — select one:</p>
           <div class="sheet-tabs" id="stabs2"></div>
           <p class="sheet-info" id="sinfo2"></p>
         </div>
@@ -113,117 +147,197 @@ tr.break-row{background:#fff8f8}tr.miss-row{background:#fffbf0}
     </div>
     <div class="actions">
       <span style="font-size:12px;color:#aaa">All data stays in your browser</span>
-      <button class="btn btn-primary" id="s1btn" onclick="goS2()" disabled>Next: map columns →</button>
+      <button class="btn btn-primary" id="s1btn" onclick="goS(2)" disabled>Next: configure pivot →</button>
     </div>
   </div>
 </div>
 
-<!-- STEP 2: COLUMN MAPPING -->
+<!-- ═══ STEP 2: PIVOT CONFIG ═══ -->
 
 <div id="step2" class="step">
-  <div class="card">
-    <span class="slbl">Step 2 — Key column mapping</span>
-    <p style="font-size:13px;color:#666;margin-bottom:12px">Suggested matches based on column names. ✓ = high confidence, ~ = partial, ? = no match. Add rows for multi-column matching (e.g. Cost Centre + Period).</p>
-    <div style="display:grid;grid-template-columns:1fr 32px 1fr 100px 32px;gap:8px;padding:0 10px;margin-bottom:6px">
-      <span style="font-size:11px;color:#666">File 1 column</span><span></span>
-      <span style="font-size:11px;color:#666">File 2 column</span>
-      <span style="font-size:11px;color:#666">Normalise as</span><span></span>
-    </div>
-    <div id="maplist"></div>
-    <button class="btn btn-sm" onclick="addMapRow()" style="margin-top:6px">+ Add key column</button>
-  </div>
-  <div class="actions">
-    <button class="btn" onclick="goS(1)">← Back</button>
-    <button class="btn btn-primary" onclick="goS3()">Next: values & filters →</button>
-  </div>
-</div>
 
-<!-- STEP 3: VALUES & FILTERS -->
+  <!-- Row dimension -->
 
-<div id="step3" class="step">
-  <div class="grid2" style="margin-bottom:1rem">
-    <div class="card">
-      <span class="slbl">File 1 — value & filters</span>
-      <div class="grid2" style="margin-bottom:12px">
-        <div><label>Amount column</label><select id="am1"></select></div>
-        <div><label>Aggregation</label>
-          <select id="agg1">
-            <option value="sum">Sum</option><option value="count">Count</option>
-            <option value="avg">Average</option><option value="min">Min</option><option value="max">Max</option>
-          </select>
-        </div>
+  <div class="card">
+    <span class="slbl">Row dimension — what appears as rows (e.g. LCIN, Cost Centre)</span>
+    <div class="dim-row">
+      <div>
+        <label>File 1 column</label>
+        <select id="row1"></select>
       </div>
-      <span class="slbl">Filters (optional)</span>
-      <div id="flist1"></div>
-      <button class="btn btn-sm" onclick="addF(1)">+ Add filter</button>
-    </div>
-    <div class="card">
-      <span class="slbl">File 2 — value & filters</span>
-      <div class="grid2" style="margin-bottom:12px">
-        <div><label>Amount column</label><select id="am2"></select></div>
-        <div><label>Aggregation</label>
-          <select id="agg2">
-            <option value="sum">Sum</option><option value="count">Count</option>
-            <option value="avg">Average</option><option value="min">Min</option><option value="max">Max</option>
-          </select>
-        </div>
+      <div class="dim-arrow">↔</div>
+      <div>
+        <label>File 2 column</label>
+        <select id="row2"></select>
       </div>
-      <span class="slbl">Filters (optional)</span>
-      <div id="flist2"></div>
-      <button class="btn btn-sm" onclick="addF(2)">+ Add filter</button>
+      <div>
+        <label>Normalise as</label>
+        <select id="rownorm">
+          <option value="text">Text (trim)</option>
+          <option value="num">Number</option>
+          <option value="int">Integer</option>
+          <option value="lower">Lowercase</option>
+          <option value="upper">Uppercase</option>
+        </select>
+      </div>
     </div>
   </div>
+
+  <!-- Column dimension -->
+
   <div class="card">
+    <span class="slbl">Column dimension — what spreads across columns (e.g. Period, Month)</span>
+    <div class="dim-row">
+      <div>
+        <label>File 1 column</label>
+        <select id="col1"></select>
+      </div>
+      <div class="dim-arrow">↔</div>
+      <div>
+        <label>File 2 column</label>
+        <select id="col2"></select>
+      </div>
+      <div>
+        <label>Normalise as</label>
+        <select id="colnorm">
+          <option value="date">Date (MMM-YY)</option>
+          <option value="text">Text (trim)</option>
+          <option value="num">Number</option>
+          <option value="int">Integer</option>
+          <option value="lower">Lowercase</option>
+          <option value="upper">Uppercase</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Values -->
+
+  <div class="card">
+    <span class="slbl">Values</span>
     <div class="grid2">
       <div>
-        <label>Tolerance — ignore differences smaller than</label>
-        <input type="number" id="tol" value="0.01" step="0.01" min="0">
-        <p style="font-size:11px;color:#aaa;margin-top:3px">Set to 0 to flag every difference</p>
+        <div class="grid2" style="margin-bottom:0">
+          <div>
+            <label>File 1 — amount column</label>
+            <select id="amt1"></select>
+          </div>
+          <div>
+            <label>Aggregation</label>
+            <select id="agg1">
+              <option value="sum">Sum</option>
+              <option value="count">Count</option>
+              <option value="avg">Average</option>
+              <option value="min">Min</option>
+              <option value="max">Max</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div>
-        <label>Output labels</label>
-        <div class="grid2">
-          <input type="text" id="lbl1" placeholder="e.g. Essbase">
-          <input type="text" id="lbl2" placeholder="e.g. GL">
+        <div class="grid2" style="margin-bottom:0">
+          <div>
+            <label>File 2 — amount column</label>
+            <select id="amt2"></select>
+          </div>
+          <div>
+            <label>Aggregation</label>
+            <select id="agg2">
+              <option value="sum">Sum</option>
+              <option value="count">Count</option>
+              <option value="avg">Average</option>
+              <option value="min">Min</option>
+              <option value="max">Max</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Filters -->
+
+  <div class="grid2">
+    <div class="card">
+      <span class="slbl">File 1 filters <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional — e.g. Version = Actual)</span></span>
+      <div id="flist1"></div>
+      <button class="btn btn-sm" onclick="addF(1)" style="margin-top:4px">+ Add filter</button>
+    </div>
+    <div class="card">
+      <span class="slbl">File 2 filters <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional)</span></span>
+      <div id="flist2"></div>
+      <button class="btn btn-sm" onclick="addF(2)" style="margin-top:4px">+ Add filter</button>
+    </div>
+  </div>
+
+  <!-- Labels & tolerance -->
+
+  <div class="card">
+    <div class="grid3">
+      <div>
+        <label>File 1 label</label>
+        <input type="text" id="lbl1" placeholder="e.g. Essbase">
+      </div>
+      <div>
+        <label>File 2 label</label>
+        <input type="text" id="lbl2" placeholder="e.g. GL">
+      </div>
+      <div>
+        <label>Tolerance (ignore differences below)</label>
+        <input type="number" id="tol" value="0.01" step="0.01" min="0">
+      </div>
+    </div>
+  </div>
+
   <div class="actions">
-    <button class="btn" onclick="goS(2)">← Back</button>
-    <button class="btn btn-primary" onclick="runRecon()">Run reconciliation</button>
+    <button class="btn" onclick="goS(1)">← Back</button>
+    <button class="btn btn-primary" id="runBtn" onclick="runRecon()">Run reconciliation</button>
   </div>
 </div>
 
-<!-- STEP 4: RESULTS -->
+<!-- ═══ STEP 3: RESULTS ═══ -->
 
-<div id="step4" class="step">
-  <div id="stats" class="grid4" style="margin-bottom:1rem"></div>
-  <div class="filter-bar">
-    <button class="btn btn-sm active" id="fa" onclick="filt('all',this)">All rows</button>
-    <button class="btn btn-sm" id="fb" onclick="filt('break',this)">Breaks</button>
-    <button class="btn btn-sm" id="fm2" onclick="filt('miss2',this)">Not in F2</button>
-    <button class="btn btn-sm" id="fm1" onclick="filt('miss1',this)">Not in F1</button>
-    <button class="btn btn-sm" onclick="exportCSV()" style="margin-left:auto">Export breaks CSV ↓</button>
+<div id="step3" class="step">
+  <div id="statBar" class="stat-bar"></div>
+
+  <div class="toolbar">
+    <button class="btn btn-sm active" id="fa" onclick="setView('all',this)">All rows</button>
+    <button class="btn btn-sm" id="fb" onclick="setView('breaks',this)">Break rows only</button>
+    <button class="btn btn-sm" onclick="exportCSV()" style="margin-left:auto">Export CSV ↓</button>
   </div>
-  <div id="resultsWrap"></div>
+
+  <div class="pivot-wrap">
+    <table class="pivot-table" id="pivotTable"></table>
+  </div>
+
+  <p style="font-size:11px;color:#888;margin-top:8px">Click any difference cell to see source rows behind that number.</p>
+
   <div class="actions">
-    <button class="btn" onclick="goS(1);resetAll()">← Start over</button>
+    <div class="actions-left">
+      <button class="btn" onclick="goS(2)">← Edit filters &amp; values</button>
+      <button class="btn btn-danger" onclick="goS(1);resetAll()">↺ Start over</button>
+    </div>
     <span id="rcount" style="font-size:12px;color:#888"></span>
   </div>
 </div>
 
 </div>
-<div class="footer">Runs entirely in your browser — no data is uploaded or shared anywhere.</div>
+<div class="footer">All data stays in your browser — nothing is uploaded or shared.</div>
 
 <script>
-let D={1:[],2:[]},WB={1:null,2:null},allRows=[],meta={},fcC={1:0,2:0},mapC=0,srcMap={1:{},2:{}};
+// ═══ STATE ═══
+let D = {1:[], 2:[]};
+let WB = {1:null, 2:null};
+let pivotData = null;   // built pivot comparison
+let meta = {};
+let fcC = {1:0, 2:0};
+let currentView = 'all';
 
-function ev(e,id){e.preventDefault();document.getElementById(id).classList.add('drag')}
-function uv(id){document.getElementById(id).classList.remove('drag')}
-function dp(e,n){e.preventDefault();uv('zone'+n);const f=e.dataTransfer.files[0];if(f)pf(n,f)}
-function lf(n,i){if(i.files[0])pf(n,i.files[0])}
-function goS(n){document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));document.getElementById('step'+n).classList.add('active')}
+// ═══ FILE LOADING ═══
+function ev(e,id){ e.preventDefault(); document.getElementById(id).classList.add('drag'); }
+function uv(id){ document.getElementById(id).classList.remove('drag'); }
+function dp(e,n){ e.preventDefault(); uv('zone'+n); const f=e.dataTransfer.files[0]; if(f) pf(n,f); }
+function lf(n,i){ if(i.files[0]) pf(n,i.files[0]); }
 
 function pf(n, file) {
   const r = new FileReader();
@@ -235,27 +349,19 @@ function pf(n, file) {
       } else {
         wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
       }
-    } catch(err) { alert('Could not read file: ' + file.name); return; }
-
+    } catch(err) { alert('Could not read: ' + file.name); return; }
     WB[n] = wb;
     document.getElementById('zone'+n).classList.add('loaded');
-    document.getElementById('z'+n+'t').textContent = file.name;
-
-    const sheetNames = wb.SheetNames;
-
-    if (sheetNames.length === 1) {
-      // Single sheet — load automatically
-      loadSheet(n, sheetNames[0]);
-      document.getElementById('sheets'+n).style.display = 'none';
+    if (wb.SheetNames.length === 1) {
+      loadSheet(n, wb.SheetNames[0], file.name);
+      document.getElementById('sheetpicker'+n).style.display = 'none';
     } else {
-      // Multiple sheets — show tab picker
-      document.getElementById('sheets'+n).style.display = 'block';
-      const tabsEl = document.getElementById('stabs'+n);
-      tabsEl.innerHTML = sheetNames.map(s =>
+      document.getElementById('z'+n+'t').textContent = file.name + ' — ' + wb.SheetNames.length + ' sheets';
+      document.getElementById('sheetpicker'+n).style.display = 'block';
+      document.getElementById('stabs'+n).innerHTML = wb.SheetNames.map(s =>
         `<div class="sheet-tab" onclick="selectSheet(${n},'${s.replace(/'/g,"\\'")}',this)">${s}</div>`
       ).join('');
-      document.getElementById('sinfo'+n).textContent = sheetNames.length + ' sheets found — click one to select';
-      D[n] = []; // clear until user picks
+      D[n] = [];
       checkReady();
     }
   };
@@ -263,18 +369,20 @@ function pf(n, file) {
   else r.readAsArrayBuffer(file);
 }
 
-function selectSheet(n, sheetName, btn) {
-  document.querySelectorAll('#stabs'+n+' .sheet-tab').forEach(t => t.classList.remove('selected'));
-  btn.classList.add('selected');
-  loadSheet(n, sheetName);
+function selectSheet(n, name, btn) {
+  document.querySelectorAll('#stabs'+n+' .sheet-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  loadSheet(n, name, null);
 }
 
-function loadSheet(n, sheetName) {
-  const ws = WB[n].Sheets[sheetName];
-  const data = XLSX.utils.sheet_to_json(ws, {defval:''});
+function loadSheet(n, name, fileName) {
+  const data = XLSX.utils.sheet_to_json(WB[n].Sheets[name], {defval:''});
   D[n] = data;
-  document.getElementById('sinfo'+n).textContent = '✓ "' + sheetName + '" selected — ' + data.length + ' rows, ' + Object.keys(data[0]||{}).length + ' columns';
-  document.getElementById('z'+n+'t').textContent = document.getElementById('z'+n+'t').textContent.split(' — ')[0] + ' — ' + sheetName;
+  const numCols = Object.keys(data[0]||{}).length;
+  const label = (fileName ? fileName + ' — ' : '') + name;
+  document.getElementById('z'+n+'t').textContent = label;
+  document.getElementById('sinfo'+n).textContent =
+    '✓ "' + name + '" — ' + data.length + ' rows, ' + numCols + ' columns';
   checkReady();
 }
 
@@ -282,214 +390,478 @@ function checkReady() {
   document.getElementById('s1btn').disabled = !(D[1].length && D[2].length);
 }
 
-function cols(n){return Object.keys(D[n][0]||{})}
-function selOpts(n,sel){return cols(n).map(c=>`<option${c===sel?' selected':''}>${c}</option>`).join('')}
+// ═══ STEP NAV ═══
+function goS(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  if (n === 2) populateConfig();
+  const runBtn = document.getElementById('runBtn');
+  if (runBtn) runBtn.textContent = (n===2 && pivotData) ? 'Re-run reconciliation' : 'Run reconciliation';
+}
 
-const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-function parseColDate(s){
-  const n=s.toLowerCase().replace(/[^a-z0-9]/g,'');
-  const num=n.replace(/[a-z]/g,''),alpha=n.replace(/[0-9]/g,'');
-  if(alpha&&MONTHS[alpha]&&num.length>=2){const y=num.length===2?2000+parseInt(num):parseInt(num.slice(-4));return{m:MONTHS[alpha],y};}
-  if(/^\d{6}$/.test(n)){const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(2));if(m>=1&&m<=12)return{m,y:2000+y};}
-  if(/^\d{8}$/.test(n)){const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(-4));if(m>=1&&m<=12)return{m,y};}
+// ═══ CONFIG POPULATION ═══
+function cols(n) { return Object.keys(D[n][0] || {}); }
+
+function fillSel(id, n, guess) {
+  const c = cols(n);
+  const el = document.getElementById(id);
+  el.innerHTML = c.map(col => `<option${col===guess?' selected':''}>${col}</option>`).join('');
+}
+
+const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
+  january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+
+function parseColDate(s) {
+  const n = s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const num = n.replace(/[a-z]/g,''), alpha = n.replace(/[0-9]/g,'');
+  if (alpha && MONTHS[alpha] && num.length >= 2) {
+    const y = num.length===2 ? 2000+parseInt(num) : parseInt(num.slice(-4));
+    return {m: MONTHS[alpha], y};
+  }
+  if (/^\d{6}$/.test(n)) { const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(2)); if(m>=1&&m<=12) return{m,y:2000+y}; }
+  if (/^\d{8}$/.test(n)) { const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(-4)); if(m>=1&&m<=12) return{m,y}; }
   return null;
 }
-function colSim(a,b){
-  const da=parseColDate(a),db=parseColDate(b);
-  if(da&&db&&da.m===db.m&&da.y===db.y)return{score:95};
-  const na=a.toLowerCase().replace(/[^a-z0-9]/g,''),nb=b.toLowerCase().replace(/[^a-z0-9]/g,'');
-  if(na===nb)return{score:100};
-  if(na.includes(nb)||nb.includes(na))return{score:72};
-  let common=0;for(let i=0;i<Math.min(na.length,nb.length);i++)if(na[i]===nb[i])common++;
-  const ratio=common/Math.max(na.length,nb.length);
-  return{score:ratio>0.6?Math.round(ratio*75):0};
-}
-function suggestMappings(){
-  const c1=cols(1),c2=cols(2),used=new Set();
-  return c1.slice(0,6).map(col=>{
-    let best=null,bestScore=-1;
-    c2.forEach(col2=>{if(used.has(col2))return;const s=colSim(col,col2);if(s.score>bestScore){bestScore=s.score;best={col2,score:s.score};}});
-    if(best&&best.score>35){used.add(best.col2);return{c1:col,c2:best.col2,score:best.score};}
-    return{c1:col,c2:c2[0]||'',score:0};
-  });
+
+function colSim(a, b) {
+  const da = parseColDate(a), db = parseColDate(b);
+  if (da && db && da.m===db.m && da.y===db.y) return 95;
+  const na = a.toLowerCase().replace(/[^a-z0-9]/g,''), nb = b.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if (na===nb) return 100;
+  if (na.includes(nb)||nb.includes(na)) return 70;
+  return 0;
 }
 
-const normTypes=[{v:'text',l:'Text (trim)'},{v:'num',l:'Number'},{v:'int',l:'Integer'},{v:'date',l:'Date (MMM-YY)'},{v:'lower',l:'Lowercase'},{v:'upper',l:'Uppercase'}];
-function normOpts(sel){return normTypes.map(n=>`<option value="${n.v}"${n.v===sel?' selected':''}>${n.l}</option>`).join('')}
-function guessNorm(col){const d=parseColDate(col);return d?'date':'text';}
-
-function addMapRow(c1def,c2def,scoreHint){
-  const id='mr_'+(++mapC);
-  const score=scoreHint||0;
-  const cls=score>=85?'high':score>=45?'med':'low';
-  const icon=score>=85?'✓':score>=45?'~':'?';
-  const norm=c1def?guessNorm(c1def):'text';
-  const div=document.createElement('div');
-  div.className='map-row'+(score>=85?' confirmed':'');div.id=id;
-  div.innerHTML=`<select class="mc1" onchange="recheckConf('${id}')">${selOpts(1,c1def)}</select><span class="conf ${cls}" style="text-align:center">${icon}</span><select class="mc2" onchange="recheckConf('${id}')">${selOpts(2,c2def)}</select><select class="mnorm">${normOpts(norm)}</select><button class="rm-btn" onclick="if(document.querySelectorAll('.map-row').length>1)document.getElementById('${id}').remove()">×</button>`;
-  document.getElementById('maplist').appendChild(div);
-}
-function recheckConf(id){
-  const row=document.getElementById(id);
-  const s=colSim(row.querySelector('.mc1').value,row.querySelector('.mc2').value);
-  const span=row.querySelector('.conf');
-  if(s.score>=85){row.className='map-row confirmed';span.className='conf high';span.textContent='✓';}
-  else if(s.score>=45){row.className='map-row';span.className='conf med';span.textContent='~';}
-  else{row.className='map-row';span.className='conf low';span.textContent='?';}
-}
-function getMappings(){return Array.from(document.querySelectorAll('.map-row')).map(r=>({c1:r.querySelector('.mc1').value,c2:r.querySelector('.mc2').value,norm:r.querySelector('.mnorm').value}));}
-
-function goS2(){
-  document.getElementById('maplist').innerHTML='';mapC=0;
-  suggestMappings().forEach(s=>addMapRow(s.c1,s.c2,s.score));
-  goS(2);
-}
-function goS3(){
-  document.getElementById('am1').innerHTML=cols(1).map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('am2').innerHTML=cols(2).map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('flist1').innerHTML='';
-  document.getElementById('flist2').innerHTML='';
-  fcC={1:0,2:0};goS(3);
+function guessMatch(col1, cols2) {
+  let best = cols2[0], bestScore = -1;
+  cols2.forEach(c => { const s = colSim(col1,c); if(s>bestScore){bestScore=s;best=c;} });
+  return best;
 }
 
-function addF(n){
-  const id='f'+n+'_'+(++fcC[n]);
-  const ops=['=','!=','contains','starts with','>','<','>=','<='].map(o=>`<option>${o}</option>`).join('');
-  const div=document.createElement('div');div.className='fr-row';div.id=id;
-  div.innerHTML=`<select class="fc">${cols(n).map(c=>`<option>${c}</option>`).join('')}</select><select class="fo">${ops}</select><input class="fv" type="text" placeholder="value"><button class="rm-btn" onclick="document.getElementById('${id}').remove()">×</button>`;
+function looksLikePeriod(col) {
+  return parseColDate(col) !== null ||
+    ['period','month','mth','date','yr','year','yyyymm','mmyyyy'].some(k => col.toLowerCase().includes(k));
+}
+function looksLikeAmount(col) {
+  return ['amount','amt','value','balance','total','sum','lccy','fccy'].some(k => col.toLowerCase().includes(k));
+}
+function looksLikeKey(col) {
+  return ['lcin','code','id','centre','center','cc','entity','account','dept'].some(k => col.toLowerCase().includes(k));
+}
+
+function populateConfig() {
+  const c1 = cols(1), c2 = cols(2);
+
+  // Guess row dimension
+  const rowGuess1 = c1.find(looksLikeKey) || c1[0];
+  const rowGuess2 = guessMatch(rowGuess1, c2);
+  fillSel('row1', 1, rowGuess1);
+  fillSel('row2', 2, rowGuess2);
+
+  // Guess column dimension (period)
+  const colGuess1 = c1.find(looksLikePeriod) || c1[1] || c1[0];
+  const colGuess2 = guessMatch(colGuess1, c2);
+  fillSel('col1', 1, colGuess1);
+  fillSel('col2', 2, colGuess2);
+  // Auto-set normalise to date if it looks like a period
+  document.getElementById('colnorm').value = looksLikePeriod(colGuess1) ? 'date' : 'text';
+
+  // Amount columns
+  const amtGuess1 = c1.find(looksLikeAmount) || c1[c1.length-1];
+  const amtGuess2 = guessMatch(amtGuess1, c2);
+  fillSel('amt1', 1, amtGuess1);
+  fillSel('amt2', 2, amtGuess2);
+
+  // Clear filters
+  document.getElementById('flist1').innerHTML = '';
+  document.getElementById('flist2').innerHTML = '';
+  fcC = {1:0, 2:0};
+}
+
+// ═══ FILTERS ═══
+function uniqueVals(n, colName) {
+  const seen = new Set();
+  D[n].forEach(row => { const v = String(row[colName]||'').trim(); if(v) seen.add(v); });
+  return Array.from(seen).sort((a,b) => a.localeCompare(b, undefined, {numeric:true})).slice(0, 300);
+}
+
+function updateFilterValues(n, id) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  const colName = row.querySelector('.fc').value;
+  const op = row.querySelector('.fo').value;
+  const valEl = row.querySelector('.fv');
+  const currentVal = valEl ? valEl.value : '';
+  const numericOp = ['>', '<', '>=', '<='].includes(op);
+  const vals = uniqueVals(n, colName);
+  if (numericOp || vals.length === 0) {
+    if (valEl && valEl.tagName !== 'INPUT') {
+      const inp = document.createElement('input');
+      inp.className = 'fv'; inp.type = 'text'; inp.placeholder = 'value'; inp.value = currentVal;
+      valEl.replaceWith(inp);
+    }
+  } else {
+    const opts = `<option value="">-- select --</option>` + vals.map(v =>
+      `<option${v===currentVal?' selected':''}>${v}</option>`).join('');
+    if (valEl && valEl.tagName === 'SELECT') {
+      valEl.innerHTML = opts;
+    } else {
+      const sel = document.createElement('select');
+      sel.className = 'fv'; sel.innerHTML = opts;
+      if (valEl) valEl.replaceWith(sel); else row.appendChild(sel);
+    }
+  }
+}
+
+function addF(n) {
+  const id = 'f'+n+'_'+(++fcC[n]);
+  const ops = ['=','!=','contains','starts with','>','<','>=','<='].map(o=>`<option>${o}</option>`).join('');
+  const div = document.createElement('div'); div.className='fr-row'; div.id=id;
+  div.innerHTML = `
+    <select class="fc" onchange="updateFilterValues(${n},'${id}')">${cols(n).map(c=>`<option>${c}</option>`).join('')}</select>
+    <select class="fo" onchange="updateFilterValues(${n},'${id}')">${ops}</select>
+    <select class="fv"><option value="">-- select --</option></select>
+    <button class="rm-btn" onclick="document.getElementById('${id}').remove()">×</button>`;
   document.getElementById('flist'+n).appendChild(div);
+  updateFilterValues(n, id);
 }
-function getFs(n){return Array.from(document.getElementById('flist'+n).querySelectorAll('.fr-row')).map(r=>({col:r.querySelector('.fc').value,op:r.querySelector('.fo').value,val:r.querySelector('.fv').value})).filter(f=>f.val!=='');}
-function applyFs(data,filters){
-  if(!filters.length)return data;
-  return data.filter(row=>filters.every(f=>{
-    const cell=String(row[f.col]||'').toLowerCase(),v=f.val.toLowerCase();
-    if(f.op==='=')return cell===v;if(f.op==='!=')return cell!==v;
-    if(f.op==='contains')return cell.includes(v);if(f.op==='starts with')return cell.startsWith(v);
-    const cv=parseFloat(cell),fv=parseFloat(v);
-    if(f.op==='>')return cv>fv;if(f.op==='<')return cv<fv;if(f.op==='>=')return cv>=fv;if(f.op==='<=')return cv<=fv;
+
+function getFs(n) {
+  return Array.from(document.getElementById('flist'+n).querySelectorAll('.fr-row'))
+    .map(r => ({col:r.querySelector('.fc').value, op:r.querySelector('.fo').value, val:r.querySelector('.fv').value}))
+    .filter(f => f.val !== '' && f.val !== undefined);
+}
+
+function applyFs(data, filters) {
+  if (!filters.length) return data;
+  return data.filter(row => filters.every(f => {
+    const cell = String(row[f.col]||'').toLowerCase(), v = f.val.toLowerCase();
+    if (f.op==='=') return cell===v;
+    if (f.op==='!=') return cell!==v;
+    if (f.op==='contains') return cell.includes(v);
+    if (f.op==='starts with') return cell.startsWith(v);
+    const cv=parseFloat(cell), fv=parseFloat(v);
+    if (f.op==='>') return cv>fv; if (f.op==='<') return cv<fv;
+    if (f.op==='>=') return cv>=fv; if (f.op==='<=') return cv<=fv;
     return true;
   }));
 }
 
-function normalise(val,type){
-  const s=String(val||'').trim();
-  if(type==='num')return String(parseFloat(s.replace(/,/g,''))||0);
-  if(type==='int')return String(parseInt(s.replace(/,/g,''))||0);
-  if(type==='lower')return s.toLowerCase();
-  if(type==='upper')return s.toUpperCase();
-  if(type==='date'){
-    const d=new Date(s);if(!isNaN(d))return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}).replace(' ','-');
-    const pd=parseColDate(s);if(pd){const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mn[pd.m-1]+'-'+String(pd.y).slice(-2);}
+// ═══ NORMALISE ═══
+function normalise(val, type) {
+  const s = String(val||'').trim();
+  if (type==='num') return String(parseFloat(s.replace(/,/g,''))||0);
+  if (type==='int') return String(parseInt(s.replace(/,/g,''))||0);
+  if (type==='lower') return s.toLowerCase();
+  if (type==='upper') return s.toUpperCase();
+  if (type==='date') {
+    // Try JS date parse
+    const d = new Date(s);
+    if (!isNaN(d) && s.length > 4) return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}).replace(' ','-');
+    // Try MMYYYY / YYYYMM patterns
+    const pd = parseColDate(s);
+    if (pd) {
+      const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return mn[pd.m-1] + '-' + String(pd.y).slice(-2);
+    }
     return s.toLowerCase();
   }
   return s;
 }
-function makeKey(row,maps,side){return maps.map(m=>normalise(row[side===1?m.c1:m.c2],m.norm)).join('§');}
 
-function doAgg(data,maps,side,amtCol,aggType){
-  const map={},cnts={};srcMap[side]={};
-  data.forEach(row=>{
-    const k=makeKey(row,maps,side);if(!k)return;
-    if(!srcMap[side][k])srcMap[side][k]=[];srcMap[side][k].push(row);
-    const v=parseFloat(String(row[amtCol]||'').replace(/,/g,''))||0;
-    if(aggType==='count'){cnts[k]=(cnts[k]||0)+1;}
-    else if(aggType==='sum'){map[k]=(map[k]||0)+v;}
-    else if(aggType==='avg'){map[k]=(map[k]||0)+v;cnts[k]=(cnts[k]||0)+1;}
-    else if(aggType==='min'){map[k]=map[k]===undefined?v:Math.min(map[k],v);}
-    else if(aggType==='max'){map[k]=map[k]===undefined?v:Math.max(map[k],v);}
+// ═══ PIVOT BUILD ═══
+function buildPivot(data, rowCol, colCol, amtCol, aggType, rowNorm, colNorm, filters) {
+  const filtered = applyFs(data, filters);
+  const cells = {};    // cells[rowKey][colKey] = aggregated value
+  const counts = {};   // for avg
+  const src = {};      // src[rowKey][colKey] = [source rows]
+  const rowKeys = new Set();
+  const colKeys = new Set();
+
+  filtered.forEach(row => {
+    const rk = normalise(row[rowCol], rowNorm);
+    const ck = normalise(row[colCol], colNorm);
+    if (!rk || !ck) return;
+    rowKeys.add(rk);
+    colKeys.add(ck);
+    if (!cells[rk]) cells[rk] = {};
+    if (!src[rk]) src[rk] = {};
+    if (!src[rk][ck]) src[rk][ck] = [];
+    src[rk][ck].push(row);
+    const v = parseFloat(String(row[amtCol]||'').replace(/,/g,'')) || 0;
+    if (aggType==='count') {
+      cells[rk][ck] = (cells[rk][ck]||0) + 1;
+    } else if (aggType==='sum') {
+      cells[rk][ck] = (cells[rk][ck]||0) + v;
+    } else if (aggType==='avg') {
+      cells[rk][ck] = (cells[rk][ck]||0) + v;
+      if (!counts[rk]) counts[rk] = {};
+      counts[rk][ck] = (counts[rk][ck]||0) + 1;
+    } else if (aggType==='min') {
+      cells[rk][ck] = cells[rk][ck]===undefined ? v : Math.min(cells[rk][ck], v);
+    } else if (aggType==='max') {
+      cells[rk][ck] = cells[rk][ck]===undefined ? v : Math.max(cells[rk][ck], v);
+    }
   });
-  if(aggType==='count')return cnts;
-  if(aggType==='avg'){const r={};Object.keys(map).forEach(k=>r[k]=cnts[k]?map[k]/cnts[k]:0);return r;}
-  return map;
-}
 
-function fmt(n){if(n==null)return'—';return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-
-function runRecon(){
-  const maps=getMappings();
-  const a1=document.getElementById('am1').value,a2=document.getElementById('am2').value;
-  const agg1=document.getElementById('agg1').value,agg2=document.getElementById('agg2').value;
-  const tol=parseFloat(document.getElementById('tol').value)||0.01;
-  const l1=document.getElementById('lbl1').value||'File 1',l2=document.getElementById('lbl2').value||'File 2';
-  meta={maps,a1,a2,agg1,agg2,tol,l1,l2};
-  const fd1=applyFs(D[1],getFs(1)),fd2=applyFs(D[2],getFs(2));
-  const ag1=doAgg(fd1,maps,1,a1,agg1),ag2=doAgg(fd2,maps,2,a2,agg2);
-  allRows=[];const seen=new Set();
-  Object.keys(ag1).forEach(key=>{seen.add(key);const v1=ag1[key];if(ag2[key]!==undefined){const v2=ag2[key],diff=v1-v2;allRows.push({key,v1,v2,diff,status:Math.abs(diff)>tol?'break':'match'});}else allRows.push({key,v1,v2:null,diff:null,status:'miss2'});});
-  Object.keys(ag2).forEach(key=>{if(!seen.has(key))allRows.push({key,v1:null,v2:ag2[key],diff:null,status:'miss1'});});
-  const cnt={match:0,break:0,miss1:0,miss2:0};allRows.forEach(r=>cnt[r.status]++);
-  document.getElementById('stats').innerHTML=`<div class="stat green"><div class="stat-n">${cnt.match}</div><div class="stat-l">Matched</div></div><div class="stat red"><div class="stat-n">${cnt.break}</div><div class="stat-l">Breaks</div></div><div class="stat amber"><div class="stat-n">${cnt.miss2}</div><div class="stat-l">Not in ${l2}</div></div><div class="stat amber"><div class="stat-n">${cnt.miss1}</div><div class="stat-l">Not in ${l1}</div></div>`;
-  document.getElementById('fb').textContent='Breaks ('+cnt.break+')';
-  document.getElementById('fm2').textContent='Not in '+l2+' ('+cnt.miss2+')';
-  document.getElementById('fm1').textContent='Not in '+l1+' ('+cnt.miss1+')';
-  renderT(allRows);goS(4);
-}
-
-function renderT(rows){
-  document.getElementById('rcount').textContent=rows.length+' rows — click Source to inspect raw data';
-  const maps=meta.maps||[];
-  const aggLbl1=(meta.agg1||'sum').charAt(0).toUpperCase()+(meta.agg1||'sum').slice(1)+' of '+(meta.a1||'');
-  const aggLbl2=(meta.agg2||'sum').charAt(0).toUpperCase()+(meta.agg2||'sum').slice(1)+' of '+(meta.a2||'');
-  const span=maps.length+5;
-  if(!rows.length){document.getElementById('resultsWrap').innerHTML=`<div class="tbl-wrap"><p style="text-align:center;padding:2rem;color:#888">No rows to display</p></div>`;return;}
-  const keyHdrs=maps.map(m=>`<th>${m.c1===m.c2?m.c1:m.c1+' / '+m.c2}</th>`).join('');
-  let html=`<div class="tbl-wrap"><table><thead><tr>${keyHdrs}<th style="text-align:right">${meta.l1}<br><span style="font-weight:400;font-size:10px">${aggLbl1}</span></th><th style="text-align:right">${meta.l2}<br><span style="font-weight:400;font-size:10px">${aggLbl2}</span></th><th style="text-align:right">Difference</th><th>Status</th><th>Source</th></tr></thead><tbody>`;
-  rows.forEach((r,i)=>{
-    const parts=r.key.split('§');
-    const keyCells=parts.map(p=>`<td style="font-family:'Courier New',monospace">${p}</td>`).join('');
-    let tag,dc,rc='';
-    if(r.status==='match'){tag='<span class="tag tag-green">Match</span>';dc='<span style="color:#2d7a4f">0.00</span>';}
-    else if(r.status==='break'){rc='break-row';tag='<span class="tag tag-red">Break</span>';dc=`<span style="color:#c0392b;font-weight:600">${fmt(r.diff)}</span>`;}
-    else if(r.status==='miss1'){rc='miss-row';tag=`<span class="tag tag-amber">Not in ${meta.l1}</span>`;dc='—';}
-    else{rc='miss-row';tag=`<span class="tag tag-amber">Not in ${meta.l2}</span>`;dc='—';}
-    html+=`<tr class="${rc}" id="row_${i}">${keyCells}<td style="text-align:right;font-family:'Courier New',monospace">${r.v1!=null?fmt(r.v1):'—'}</td><td style="text-align:right;font-family:'Courier New',monospace">${r.v2!=null?fmt(r.v2):'—'}</td><td style="text-align:right;font-family:'Courier New',monospace">${dc}</td><td>${tag}</td><td><button class="expand-btn" id="ebtn_${i}" onclick="toggleDrill(${i})">▶ Source</button></td></tr><tr id="drill_${i}" style="display:none"><td colspan="${span}" style="padding:0"><div class="drill-panel" id="drillcontent_${i}"></div></td></tr>`;
-  });
-  html+='</tbody></table></div>';
-  document.getElementById('resultsWrap').innerHTML=html;
-}
-
-function toggleDrill(i){
-  const drillRow=document.getElementById('drill_'+i);
-  const btn=document.getElementById('ebtn_'+i);
-  const isOpen=drillRow.style.display!=='none';
-  if(isOpen){drillRow.style.display='none';btn.textContent='▶ Source';return;}
-  const r=allRows[i];
-  const src1=srcMap[1][r.key]||[],src2=srcMap[2][r.key]||[];
-  function buildSubTable(rows,label,amtCol){
-    if(!rows.length)return`<p class="dlbl" style="color:#888;margin-bottom:10px">No source rows in ${label}</p>`;
-    const allCols=Object.keys(rows[0]);
-    return`<p class="dlbl">${label} — ${rows.length} source row${rows.length!==1?'s':''}</p><div class="drill-tbl-wrap"><table><thead><tr>${allCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${allCols.map(c=>`<td${c===amtCol?' style="text-align:right;font-weight:600"':''}>${row[c]!=null&&row[c]!==''?row[c]:'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  // Finalise averages
+  if (aggType==='avg') {
+    Object.keys(cells).forEach(rk => {
+      Object.keys(cells[rk]).forEach(ck => {
+        if (counts[rk]&&counts[rk][ck]) cells[rk][ck] /= counts[rk][ck];
+      });
+    });
   }
-  document.getElementById('drillcontent_'+i).innerHTML=buildSubTable(src1,meta.l1,meta.a1)+buildSubTable(src2,meta.l2,meta.a2);
-  drillRow.style.display='';btn.textContent='▼ Source';
+
+  // Sort column keys: chronologically if date, else alphabetically
+  const sortedCols = Array.from(colKeys).sort((a, b) => {
+    const da = parseColDate(a), db = parseColDate(b);
+    if (da && db) return (da.y*12+da.m) - (db.y*12+db.m);
+    return a.localeCompare(b, undefined, {numeric:true});
+  });
+  const sortedRows = Array.from(rowKeys).sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
+
+  return { cells, src, rowKeys: sortedRows, colKeys: sortedCols };
 }
 
-function filt(type,btn){
-  document.querySelectorAll('.filter-bar .btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const map={all:allRows,break:allRows.filter(r=>r.status==='break'),miss1:allRows.filter(r=>r.status==='miss1'),miss2:allRows.filter(r=>r.status==='miss2')};
-  renderT(map[type]||allRows);
+// ═══ RUN RECON ═══
+function runRecon() {
+  const rowCol1 = document.getElementById('row1').value;
+  const rowCol2 = document.getElementById('row2').value;
+  const colCol1 = document.getElementById('col1').value;
+  const colCol2 = document.getElementById('col2').value;
+  const rowNorm = document.getElementById('rownorm').value;
+  const colNorm = document.getElementById('colnorm').value;
+  const amt1   = document.getElementById('amt1').value;
+  const amt2   = document.getElementById('amt2').value;
+  const agg1   = document.getElementById('agg1').value;
+  const agg2   = document.getElementById('agg2').value;
+  const tol    = parseFloat(document.getElementById('tol').value) || 0.01;
+  const lbl1   = document.getElementById('lbl1').value || 'File 1';
+  const lbl2   = document.getElementById('lbl2').value || 'File 2';
+
+  meta = {rowCol1,rowCol2,colCol1,colCol2,rowNorm,colNorm,amt1,amt2,agg1,agg2,tol,lbl1,lbl2};
+
+  const p1 = buildPivot(D[1], rowCol1, colCol1, amt1, agg1, rowNorm, colNorm, getFs(1));
+  const p2 = buildPivot(D[2], rowCol2, colCol2, amt2, agg2, rowNorm, colNorm, getFs(2));
+
+  // Merge row and column keys from both files
+  const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])].sort((a,b) =>
+    a.localeCompare(b, undefined, {numeric:true}));
+  const allCols = [...new Set([...p1.colKeys, ...p2.colKeys])].sort((a,b) => {
+    const da=parseColDate(a),db=parseColDate(b);
+    if(da&&db) return (da.y*12+da.m)-(db.y*12+db.m);
+    return a.localeCompare(b,undefined,{numeric:true});
+  });
+
+  pivotData = {p1, p2, allRows, allCols};
+  renderPivot();
+  goS(3);
 }
 
-function exportCSV(){
-  const brk=allRows.filter(r=>r.status!=='match');if(!brk.length){alert('No breaks to export.');return;}
-  const maps=meta.maps||[];
-  const hdrs=maps.map(m=>m.c1===m.c2?m.c1:m.c1+'/'+m.c2);
-  const rows=[[...hdrs,meta.l1,meta.l2,'Difference','Status']];
-  brk.forEach(r=>{const parts=r.key.split('§');const s=r.status==='break'?'Break':r.status==='miss1'?'Not in '+meta.l1:'Not in '+meta.l2;rows.push([...parts,r.v1??'',r.v2??'',r.diff!=null?r.diff.toFixed(2):'',s]);});
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='recon_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+// ═══ RENDER PIVOT ═══
+function fmt(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-function resetAll(){
-  D={1:[],2:[]};WB={1:null,2:null};
-  document.getElementById('s1btn').disabled=true;
-  [1,2].forEach(n=>{
+function renderPivot() {
+  if (!pivotData) return;
+  const {p1, p2, allRows, allCols} = pivotData;
+  const {tol, lbl1, lbl2} = meta;
+
+  let totalCells=0, breakCells=0, missCells=0, matchCells=0;
+
+  // Filter rows based on current view
+  const showRows = currentView==='breaks'
+    ? allRows.filter(rk => {
+        return allCols.some(ck => {
+          const v1=p1.cells[rk]?.[ck], v2=p2.cells[rk]?.[ck];
+          if (v1==null||v2==null) return true;
+          return Math.abs(v1-v2) > tol;
+        });
+      })
+    : allRows;
+
+  // Build table HTML
+  let html = '<thead>';
+
+  // Header row 1: LCIN | [period colspan=3] ... | Total colspan=3
+  html += '<tr>';
+  html += `<th class="row-hdr" rowspan="2">${meta.rowCol1===meta.rowCol2 ? meta.rowCol1 : meta.rowCol1+' / '+meta.rowCol2}</th>`;
+  allCols.forEach(ck => {
+    html += `<th colspan="3" style="text-align:center;border-left:1px solid #ddd">${ck}</th>`;
+  });
+  html += `<th colspan="3" class="col-total" style="text-align:center">Total</th>`;
+  html += '</tr>';
+
+  // Header row 2: F1 | F2 | Diff (repeated per column)
+  html += '<tr>';
+  allCols.forEach(() => {
+    html += `<th style="border-left:1px solid #ddd">${lbl1}</th><th>${lbl2}</th><th>Diff</th>`;
+  });
+  html += `<th class="col-total">${lbl1}</th><th class="col-total">${lbl2}</th><th class="col-total">Diff</th>`;
+  html += '</tr>';
+  html += '</thead><tbody>';
+
+  showRows.forEach((rk, ri) => {
+    let rowTotal1=0, rowTotal2=0;
+    let rowHasBreak=false;
+
+    // First pass: compute totals
+    allCols.forEach(ck => {
+      const v1 = p1.cells[rk]?.[ck] ?? null;
+      const v2 = p2.cells[rk]?.[ck] ?? null;
+      if (v1!=null) rowTotal1 += v1;
+      if (v2!=null) rowTotal2 += v2;
+    });
+    const rowTotalDiff = rowTotal1 - rowTotal2;
+    if (Math.abs(rowTotalDiff) > tol) rowHasBreak = true;
+
+    html += `<tr id="pr_${ri}">`;
+    html += `<td class="row-key">${rk}</td>`;
+
+    allCols.forEach(ck => {
+      const v1 = p1.cells[rk]?.[ck] ?? null;
+      const v2 = p2.cells[rk]?.[ck] ?? null;
+      totalCells++;
+
+      let diffClass='', diffVal='';
+      if (v1==null || v2==null) {
+        diffClass='cell-miss'; diffVal='—'; missCells++;
+      } else {
+        const diff = v1 - v2;
+        if (Math.abs(diff) <= tol) {
+          diffClass='cell-match cell-zero'; diffVal='✓'; matchCells++;
+        } else {
+          diffClass='cell-break'; diffVal=fmt(diff); breakCells++;
+        }
+      }
+
+      const hasSrc = (p1.src[rk]?.[ck]?.length || p2.src[rk]?.[ck]?.length);
+      const clickable = hasSrc ? `style="cursor:pointer" onclick="toggleCell('${rk}','${ck}',${ri})"` : '';
+      html += `<td style="border-left:1px solid #eee">${v1!=null?fmt(v1):'—'}</td>`;
+      html += `<td>${v2!=null?fmt(v2):'—'}</td>`;
+      html += `<td class="${diffClass}" ${clickable}>${diffVal}</td>`;
+    });
+
+    // Row totals
+    const totalDiffClass = Math.abs(rowTotalDiff)>tol ? 'col-total cell-break' : 'col-total cell-match';
+    html += `<td class="col-total">${fmt(rowTotal1)}</td>`;
+    html += `<td class="col-total">${fmt(rowTotal2)}</td>`;
+    html += `<td class="${totalDiffClass}">${Math.abs(rowTotalDiff)<=tol?'✓':fmt(rowTotalDiff)}</td>`;
+    html += '</tr>';
+
+    // Drill-down row (hidden, filled on click)
+    html += `<tr class="drill-row" id="drill_${ri}">`;
+    html += `<td colspan="${allCols.length*3+4}"><div class="drill-panel" id="drillcontent_${ri}"></div></td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody>';
+  document.getElementById('pivotTable').innerHTML = html;
+
+  // Stats
+  document.getElementById('statBar').innerHTML = `
+    <div class="stat green"><div class="stat-n">${matchCells}</div><div class="stat-l">Matched cells</div></div>
+    <div class="stat red"><div class="stat-n">${breakCells}</div><div class="stat-l">Break cells</div></div>
+    <div class="stat amber"><div class="stat-n">${missCells}</div><div class="stat-l">Missing</div></div>
+    <div class="stat"><div class="stat-n">${showRows.length}</div><div class="stat-l">Rows shown</div></div>`;
+  document.getElementById('rcount').textContent = showRows.length + ' of ' + allRows.length + ' rows';
+}
+
+// ═══ DRILL DOWN ═══
+let openDrill = null;
+
+function toggleCell(rk, ck, ri) {
+  const drillRow = document.getElementById('drill_'+ri);
+  const key = rk+'§'+ck+'§'+ri;
+  if (openDrill===key) {
+    drillRow.style.display='none';
+    openDrill=null;
+    return;
+  }
+  // Close any open drill
+  if (openDrill) {
+    const parts = openDrill.split('§');
+    const prevRow = document.getElementById('drill_'+parts[2]);
+    if (prevRow) prevRow.style.display='none';
+  }
+  openDrill = key;
+
+  const {p1, p2} = pivotData;
+  const src1 = p1.src[rk]?.[ck] || [];
+  const src2 = p2.src[rk]?.[ck] || [];
+
+  function buildSubTbl(rows, label, amtCol) {
+    if (!rows.length) return `<p class="dlbl" style="color:#888;margin-bottom:8px">No source rows in ${label} for this cell</p>`;
+    const allCols = Object.keys(rows[0]);
+    const hdrs = allCols.map(c=>`<th>${c}</th>`).join('');
+    const trs = rows.map(row =>
+      `<tr>${allCols.map(c => `<td${c===amtCol?' style="text-align:right;font-weight:600"':''}>${row[c]!=null&&row[c]!==''?row[c]:'—'}</td>`).join('')}</tr>`
+    ).join('');
+    return `<p class="dlbl">${label} — ${rows.length} source row${rows.length!==1?'s':''} for <strong>${rk}</strong> / <strong>${ck}</strong></p>
+      <div class="drill-tbl-wrap"><table><thead><tr>${hdrs}</tr></thead><tbody>${trs}</tbody></table></div>`;
+  }
+
+  document.getElementById('drillcontent_'+ri).innerHTML =
+    buildSubTbl(src1, meta.lbl1, meta.amt1) + buildSubTbl(src2, meta.lbl2, meta.amt2);
+  drillRow.style.display = '';
+}
+
+// ═══ VIEW TOGGLE ═══
+function setView(type, btn) {
+  document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentView = type;
+  renderPivot();
+}
+
+// ═══ EXPORT ═══
+function exportCSV() {
+  if (!pivotData) return;
+  const {p1, p2, allRows, allCols} = pivotData;
+  const {tol, lbl1, lbl2} = meta;
+  const rows = [];
+
+  // Header
+  const hdr = ['Row Key'];
+  allCols.forEach(ck => { hdr.push(ck+' ('+lbl1+')', ck+' ('+lbl2+')', ck+' Diff', ck+' Status'); });
+  hdr.push('Total '+lbl1, 'Total '+lbl2, 'Total Diff', 'Total Status');
+  rows.push(hdr);
+
+  allRows.forEach(rk => {
+    const row = [rk];
+    let tot1=0, tot2=0;
+    allCols.forEach(ck => {
+      const v1=p1.cells[rk]?.[ck]??null, v2=p2.cells[rk]?.[ck]??null;
+      if(v1!=null) tot1+=v1; if(v2!=null) tot2+=v2;
+      const diff=v1!=null&&v2!=null?v1-v2:null;
+      const status=v1==null||v2==null?'Missing':Math.abs(diff)<=tol?'Match':'Break';
+      row.push(v1??'', v2??'', diff!=null?diff.toFixed(2):'', status);
+    });
+    const totDiff=tot1-tot2;
+    row.push(tot1.toFixed(2), tot2.toFixed(2), totDiff.toFixed(2), Math.abs(totDiff)<=tol?'Match':'Break');
+    rows.push(row);
+  });
+
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'recon_pivot_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// ═══ RESET ═══
+function resetAll() {
+  D={1:[],2:[]}; WB={1:null,2:null}; pivotData=null; currentView='all';
+  document.getElementById('s1btn').disabled = true;
+  [1,2].forEach(n => {
     document.getElementById('zone'+n).classList.remove('loaded');
-    document.getElementById('z'+n+'t').textContent='Click or drag file here';
-    document.getElementById('sheets'+n).style.display='none';
-    document.getElementById('stabs'+n).innerHTML='';
-    document.getElementById('sinfo'+n).textContent='';
+    document.getElementById('z'+n+'t').textContent = 'Click or drag file here';
+    document.getElementById('sheetpicker'+n).style.display = 'none';
+    document.getElementById('stabs'+n).innerHTML = '';
+    document.getElementById('sinfo'+n).textContent = '';
   });
 }
 </script>

@@ -407,7 +407,8 @@ input:focus, select:focus { outline: none; border-color: #555; }
 
   <div class="toolbar">
     <button class="btn btn-sm active" id="fa" onclick="setView('all',this)">All rows</button>
-    <button class="btn btn-sm" id="fb" onclick="setView('breaks',this)">Break rows only</button>
+    <button class="btn btn-sm" id="fb" onclick="setView('breaks',this)">Breaks only</button>
+    <button class="btn btn-sm" id="fc" onclick="setView('missing',this)">Missing only</button>
     <button class="btn btn-sm" onclick="exportCSV()" style="margin-left:auto">Export CSV ↓</button>
   </div>
   <div class="pivot-wrap">
@@ -438,7 +439,6 @@ let meta = {};
 let fcC = {1:0, 2:0};
 let pairC = 0;
 let currentView = 'all';
-let openDrill = null;
 let selectedRows = new Set();   // which row keys are visible
 let selectedCols = new Set();   // which pair labels are visible
 
@@ -486,6 +486,7 @@ function selectSheet(n, name, btn) {
 function loadSheet(n, name, fileName) {
   const data = XLSX.utils.sheet_to_json(WB[n].Sheets[name], {defval:''});
   D[n] = data;
+  D[n]._sheetName = name;  // store for label prefill
   const numCols = Object.keys(data[0]||{}).length;
   document.getElementById('z'+n+'t').textContent = (fileName ? fileName + ' — ' : '') + name;
   document.getElementById('sinfo'+n).textContent =
@@ -869,6 +870,11 @@ function populateConfig() {
   const amtGuess2 = c2.find(c => /amount|amt|value|balance|lcy|fcy|bal/i.test(c));
   if (amtGuess1) document.getElementById('amt1').value = amtGuess1;
   if (amtGuess2) document.getElementById('amt2').value = amtGuess2;
+
+  // ── Prefill labels from sheet names ──
+  const sn1 = D[1]._sheetName; const sn2 = D[2]._sheetName;
+  if (sn1 && !document.getElementById('lbl1').value) document.getElementById('lbl1').value = sn1;
+  if (sn2 && !document.getElementById('lbl2').value) document.getElementById('lbl2').value = sn2;
 
   // ── Value filter columns ──
   const vfOpts = '<option value="">-- no filter --</option>';
@@ -1271,9 +1277,12 @@ function renderPivot() {
   const showRows = currentView==='breaks'
     ? slicedRows.filter(rk => slicedPairs.some(p => {
         const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
-        if (v1==null||v2==null) return true;
+        if (v1==null||v2==null) return false;  // missing ≠ break
         return Math.abs(v1-v2) > tol;
       }))
+    : currentView==='missing'
+    ? slicedRows.filter(rk => slicedPairs.some(p =>
+        p1.cells[rk]?.[p.label]==null || p2.cells[rk]?.[p.label]==null))
     : slicedRows;
 
   // Use slicedPairs as the active pairs for rendering
@@ -1299,6 +1308,8 @@ function renderPivot() {
   const totalCols = activePairs.length * 3 + 4;
 
   showRows.forEach((rk, ri) => {
+    // Use stable ID based on row key so drill rows survive view changes
+    const safeId = btoa(unescape(encodeURIComponent(rk))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);
     let tot1=0, tot2=0;
     activePairs.forEach(p => {
       const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
@@ -1307,8 +1318,8 @@ function renderPivot() {
     });
     const totDiff = tot1 - tot2;
 
-    html += `<tr id="pr_${ri}">`;
-    html += `<td class="row-key">${rk}</td>`;
+    html += `<tr id="pr_${safeId}">`;
+    html += `<td class="row-key" style="cursor:pointer" onclick="toggleRowDrill('${rk.replace(/'/g,"\'")}')">${rk} <span class="drill-arrow" style="font-size:10px;color:#ccc;margin-left:4px">▶</span></td>`;
 
     activePairs.forEach(p => {
       const v1=p1.cells[rk]?.[p.label]??null;
@@ -1321,8 +1332,7 @@ function renderPivot() {
         if (Math.abs(diff)<=tol) { diffCls='cell-match cell-zero'; diffTxt='✓'; matchCells++; }
         else { diffCls='cell-break'; diffTxt=fmt(diff); breakCells++; }
       }
-      const clickable = diffCls.includes('break')||diffCls.includes('miss')
-        ? `onclick="toggleDrill('${rk.replace(/'/g,"\\'")}','${p.label.replace(/'/g,"\\'")}',${ri})"` : '';
+      const clickable = diffCls.includes('break')||diffCls.includes('miss') ? `onclick="toggleCellDrill('${rk.replace(/'/g, "\'")}')"` : '';
       html += `<td style="border-left:2px solid #eee">${v1!=null?fmt(v1):'—'}</td>`;
       html += `<td>${v2!=null?fmt(v2):'—'}</td>`;
       html += `<td class="${diffCls}" ${clickable}>${diffTxt}</td>`;
@@ -1333,7 +1343,7 @@ function renderPivot() {
     html += `<td class="col-total">${fmt(tot2)}</td>`;
     html += `<td class="${totCls}">${Math.abs(totDiff)<=tol?'✓':fmt(totDiff)}</td>`;
     html += '</tr>';
-    html += `<tr class="drill-row" id="drill_${ri}"><td colspan="${totalCols}" style="padding:0"><div class="drill-panel" id="dc_${ri}"></div></td></tr>`;
+    html += `<tr class="drill-row" id="drill_${safeId}"><td colspan="${totalCols}" style="padding:0"><div class="drill-panel" id="dc_${safeId}"></div></td></tr>`;
   });
 
   html += '</tbody>';
@@ -1350,31 +1360,63 @@ function renderPivot() {
 // ═══════════════════════════════════════════
 //  DRILL DOWN
 // ═══════════════════════════════════════════
-function toggleDrill(rk, label, ri) {
-  const drillRow = document.getElementById('drill_'+ri);
-  const key = rk+'§'+label+'§'+ri;
-  if (openDrill===key) { drillRow.style.display='none'; openDrill=null; return; }
-  if (openDrill) {
-    const prev = document.getElementById('drill_'+openDrill.split('§')[2]);
-    if (prev) prev.style.display='none';
-  }
-  openDrill = key;
-  const {p1,p2} = pivotResult;
-  const src1 = p1.src[rk]?.[label]||[];
-  const src2 = p2.src[rk]?.[label]||[];
+let openDrillId = null;
 
-  function mkTbl(rows, lbl) {
-    if (!rows.length) return `<p class="dlbl" style="color:#888;margin-bottom:8px">No source rows in ${lbl}</p>`;
-    const ks=Object.keys(rows[0]);
-    return `<p class="dlbl">${lbl} — ${rows.length} row${rows.length!==1?'s':''} for <strong>${rk}</strong> / <strong>${label}</strong></p>
+function getSafeId(rk) {
+  return btoa(unescape(encodeURIComponent(rk))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);
+}
+
+function toggleRowDrill(rk) {
+  const safeId = getSafeId(rk);
+  const drillRow = document.getElementById('drill_'+safeId);
+  if (!drillRow) return;
+  if (openDrillId === safeId) {
+    drillRow.style.display='none'; openDrillId=null;
+    // reset arrow
+    const pr = document.getElementById('pr_'+safeId);
+    if (pr) { const sp=pr.querySelector('.drill-arrow'); if(sp) sp.textContent='▶'; }
+    return;
+  }
+  // Close previous
+  if (openDrillId) {
+    const prev = document.getElementById('drill_'+openDrillId);
+    if (prev) prev.style.display='none';
+    const prevPr = document.getElementById('pr_'+openDrillId);
+    if (prevPr) { const sp=prevPr.querySelector('.drill-arrow'); if(sp) sp.textContent='▶'; }
+  }
+  openDrillId = safeId;
+  buildDrillContent(rk, safeId, null);  // null = show all columns
+  drillRow.style.display='';
+  const pr = document.getElementById('pr_'+safeId);
+  if (pr) { const sp=pr.querySelector('.drill-arrow'); if(sp) sp.textContent='▼'; }
+}
+
+function toggleCellDrill(rk) {
+  // Clicking a diff cell does the same as clicking the row — expands full source
+  toggleRowDrill(rk);
+}
+
+function buildDrillContent(rk, safeId, filterLabel) {
+  const {p1,p2} = pivotResult;
+  const el = document.getElementById('dc_'+safeId);
+  if (!el) return;
+
+  // Collect all source rows for this rk across all pairs (or just one pair if filterLabel set)
+  const pairs = filterLabel ? meta.pairs.filter(p=>p.label===filterLabel) : meta.pairs;
+
+  function mkTbl(src, lbl, amtCol) {
+    const rows = [];
+    pairs.forEach(p => { (src[rk]?.[p.label]||[]).forEach(r=>rows.push({...r, _period:p.label})); });
+    if (!rows.length) return `<p class="dlbl" style="color:#888;margin-bottom:8px">No rows in ${lbl}</p>`;
+    const ks = [...new Set(rows.flatMap(r=>Object.keys(r)))].filter(k=>k!=='_period');
+    return `<p class="dlbl">${lbl} — ${rows.length} source row${rows.length!==1?'s':''} for <strong>${rk}</strong></p>
       <div class="drill-tbl-wrap"><table>
-        <thead><tr>${ks.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(row=>`<tr>${ks.map(k=>`<td>${row[k]!=null&&row[k]!==''?row[k]:'—'}</td>`).join('')}</tr>`).join('')}</tbody>
+        <thead><tr><th>Period</th>${ks.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(row=>`<tr><td style="font-weight:500;color:#555">${row._period}</td>${ks.map(k=>`<td${k===amtCol?' style="text-align:right;font-weight:600"':''}>${row[k]!=null&&row[k]!==''?row[k]:'—'}</td>`).join('')}</tr>`).join('')}</tbody>
       </table></div>`;
   }
 
-  document.getElementById('dc_'+ri).innerHTML = mkTbl(src1, meta.lbl1) + mkTbl(src2, meta.lbl2);
-  drillRow.style.display='';
+  el.innerHTML = mkTbl(p1.src, meta.lbl1, meta.amt1) + mkTbl(p2.src, meta.lbl2, meta.amt2);
 }
 
 // ═══════════════════════════════════════════
@@ -1444,7 +1486,6 @@ let meta = {};
 let fcC = {1:0, 2:0};
 let pairC = 0;
 let currentView = 'all';
-let openDrill = null;
 let selectedRows = new Set();
 let selectedCols = new Set();
 
@@ -1989,7 +2030,7 @@ const v1=p1.cells[rk]?.[p.label]??null,v2=p2.cells[rk]?.[p.label]??null;
 let dc=’’,dt=’’;
 if(v1==null||v2==null){dc=‘cell-miss’;dt=’—’;missCells++;}
 else{const d=v1-v2;if(Math.abs(d)<=tol){dc=‘cell-match cell-zero’;dt=‘✓’;matchCells++;}else{dc=‘cell-break’;dt=fmt(d);breakCells++;}}
-const click=dc.includes(‘break’)||dc.includes(‘miss’)?`onclick="toggleDrill('${rk.replace(/'/g,"\'")}','${p.label.replace(/'/g,"\'")}',${ri})"` :’’;
+const click=dc.includes(‘break’)||dc.includes(‘miss’)?`onclick="toggleCellDrill('${rk.replace(/'/g,"\'")}','${p.label.replace(/'/g,"\'")}',${ri})"` :’’;
 html+=`<td style="border-left:2px solid #eee">${v1!=null?fmt(v1):'—'}</td><td>${v2!=null?fmt(v2):'—'}</td><td class="${dc}" ${click}>${dt}</td>`;
 });
 const tc=Math.abs(totDiff)>tol?‘col-total cell-break’:‘col-total cell-match’;
@@ -2006,7 +2047,7 @@ document.getElementById(‘rcount’).textContent=showRows.length+’ of ‘+all
 // ═══════════════════════════════════════════
 //  DRILL DOWN
 // ═══════════════════════════════════════════
-function toggleDrill(rk,label,ri) {
+function toggleCellDrill(rk,label,ri) {
 const dr=document.getElementById(‘drill_’+ri);
 const key=rk+’§’+label+’§’+ri;
 if(openDrill===key){dr.style.display=‘none’;openDrill=null;return;}

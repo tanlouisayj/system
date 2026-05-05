@@ -4,36 +4,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pivot Reconciliation Tool</title>
+<title>Pivot Reconciliation Tool v2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
-
 .header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 1rem 2rem; display: flex; align-items: center; gap: 12px; }
 .header h1 { font-size: 16px; font-weight: 600; }
 .badge { font-size: 12px; color: #888; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; }
-
 .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
 .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; }
 .step { display: none; } .step.active { display: block; }
-
 .slbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; display: block; margin-bottom: 8px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
-
-input[type=text], input[type=number], select {
-width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px;
-font-size: 13px; font-family: inherit; background: #fff; color: #1a1a1a;
-}
+input[type=text], input[type=number], select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; color: #1a1a1a; }
 input:focus, select:focus { outline: none; border-color: #555; }
-
 .upload-zone { border: 1.5px dashed #ccc; border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: background .15s, border-color .15s; }
 .upload-zone:hover, .upload-zone.drag { background: #f8f8f8; border-color: #999; }
 .upload-zone.loaded { border-color: #2d7a4f; background: #f0faf4; }
 .upload-zone input { display: none; }
-
 .btn { padding: 8px 18px; border: 1px solid #ccc; border-radius: 6px; background: #fff; font-size: 13px; font-family: inherit; cursor: pointer; transition: background .15s; color: #1a1a1a; }
 .btn:hover { background: #f5f5f5; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
@@ -41,7 +32,6 @@ input:focus, select:focus { outline: none; border-color: #555; }
 .btn-primary:hover { background: #333; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 .btn-danger { color: #c0392b; border-color: #e0b0b0; }
-
 .sheet-picker { margin-top: 10px; padding: 10px 12px; background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; }
 .sheet-picker p { font-size: 12px; color: #666; margin-bottom: 8px; }
 .sheet-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -50,38 +40,47 @@ input:focus, select:focus { outline: none; border-color: #555; }
 .sheet-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .sheet-info { font-size: 12px; color: #2d7a4f; margin-top: 8px; font-weight: 500; }
 
-.dim-row { display: grid; grid-template-columns: 1fr 30px 1fr 110px; gap: 8px; align-items: center; }
-.dim-row label { margin: 0; font-size: 12px; color: #666; }
-.dim-arrow { text-align: center; font-size: 16px; color: #ccc; padding-top: 18px; }
+/* Column pair mapping table */
+.pair-table { width: 100%; border-collapse: collapse; }
+.pair-table th { font-size: 11px; font-weight: 600; color: #666; padding: 6px 8px; border-bottom: 1px solid #e0e0e0; text-align: left; }
+.pair-table td { padding: 5px 6px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+.pair-table tr:last-child td { border-bottom: none; }
+.pair-table select { font-size: 12px; padding: 5px 8px; }
+.pair-table input[type=text] { font-size: 12px; padding: 5px 8px; }
+.conf-badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+.conf-high { background: #e8f5ee; color: #2d7a4f; }
+.conf-med  { background: #fef6e4; color: #b7770d; }
+.conf-low  { background: #fdecea; color: #c0392b; }
+.rm-btn { width: 28px; height: 28px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 15px; color: #999; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+.rm-btn:hover { background: #fee; color: #c0392b; border-color: #f5c6c6; }
+.dim-row { display: grid; grid-template-columns: 1fr 28px 1fr 110px; gap: 8px; align-items: end; }
+.dim-arrow { text-align: center; font-size: 18px; color: #ccc; padding-bottom: 10px; }
 
+/* Filters */
 .fr-row { display: grid; grid-template-columns: 1fr 90px 1fr 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
 .fr-row select, .fr-row input { font-size: 12px; }
-.rm-btn { width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 16px; color: #999; display: flex; align-items: center; justify-content: center; padding: 0; }
-.rm-btn:hover { background: #fee; color: #c0392b; border-color: #f5c6c6; }
 
 /* Pivot table */
 .pivot-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
 .pivot-table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
 .pivot-table th { padding: 8px 10px; background: #f8f8f8; border: 1px solid #e0e0e0; font-weight: 600; font-size: 11px; color: #555; text-align: center; }
-.pivot-table th.row-hdr { text-align: left; position: sticky; left: 0; z-index: 2; background: #f8f8f8; min-width: 120px; }
+.pivot-table th.row-hdr { text-align: left; position: sticky; left: 0; z-index: 2; background: #f8f8f8; min-width: 130px; }
 .pivot-table td { padding: 6px 10px; border: 1px solid #f0f0f0; text-align: right; font-family: ‘Courier New’, monospace; font-size: 11px; }
 .pivot-table td.row-key { text-align: left; font-family: inherit; font-weight: 500; position: sticky; left: 0; z-index: 1; background: #fff; border-right: 1px solid #e0e0e0; }
 .pivot-table tr:hover td { background: #fafafa; }
 .pivot-table tr:hover td.row-key { background: #fafafa; }
-
 .cell-match { color: #2d7a4f; }
-.cell-break { color: #c0392b; font-weight: 600; background: #fff5f5 !important; }
-.cell-miss { color: #b7770d; background: #fffbf0 !important; }
-.cell-zero { color: #aaa; }
-.col-total { background: #f0f0f0 !important; font-weight: 600; border-left: 2px solid #ccc !important; }
+.cell-break { color: #c0392b; font-weight: 600; background: #fff5f5 !important; cursor: pointer; }
+.cell-miss  { color: #b7770d; background: #fffbf0 !important; }
+.cell-zero  { color: #aaa; }
+.col-total  { background: #f0f4f8 !important; font-weight: 600; border-left: 2px solid #ccc !important; }
 .col-total.cell-break { background: #fdecea !important; }
-
 .drill-row { display: none; }
 .drill-row td { padding: 0; background: #fff !important; }
 .drill-panel { padding: 12px; background: #fafafa; border-top: 1px solid #e0e0e0; overflow-x: auto; }
 .drill-panel p.dlbl { font-size: 11px; font-weight: 600; color: #555; margin-bottom: 4px; font-family: inherit; }
 .drill-tbl-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; }
-.drill-tbl-wrap table { font-size: 11px; border-collapse: collapse; }
+.drill-tbl-wrap table { font-size: 11px; border-collapse: collapse; width: 100%; }
 .drill-tbl-wrap th { font-size: 10px; padding: 5px 8px; background: #f8f8f8; border-bottom: 1px solid #e0e0e0; text-align: left; font-weight: 600; color: #555; }
 .drill-tbl-wrap td { padding: 4px 8px; font-family: ‘Courier New’, monospace; font-size: 11px; border-bottom: 1px solid #f5f5f5; }
 
@@ -90,15 +89,13 @@ input:focus, select:focus { outline: none; border-color: #555; }
 .stat-n { font-size: 22px; font-weight: 600; }
 .stat-l { font-size: 11px; color: #888; margin-top: 2px; }
 .stat.green .stat-n { color: #2d7a4f; }
-.stat.red .stat-n { color: #c0392b; }
+.stat.red   .stat-n { color: #c0392b; }
 .stat.amber .stat-n { color: #b7770d; }
-
 .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 8px; }
 .actions-left { display: flex; gap: 8px; flex-wrap: wrap; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
-
+.toolbar .btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .footer { text-align: center; padding: 2rem; font-size: 12px; color: #aaa; }
-code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3px; }
 </style>
 
 </head>
@@ -106,7 +103,7 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
 
 <div class="header">
   <h1>Pivot Reconciliation Tool</h1>
-  <span class="badge">Rows + Columns + Values like a pivot table</span>
+  <span class="badge">v2 — manual column-by-column mapping</span>
 </div>
 
 <div class="container">
@@ -115,12 +112,15 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
 
 <div id="step1" class="step active">
   <div class="card">
-    <span class="slbl">Step 1 — Upload files & select sheets</span>
-    <p style="font-size:13px;color:#666;margin-bottom:1rem">If a workbook has multiple tabs, select which sheet to use after uploading.</p>
+    <span class="slbl">Step 1 — Upload files &amp; select sheets</span>
+    <p style="font-size:13px;color:#666;margin-bottom:1rem">
+      Works with wide format (months as column headers, e.g. Essbase exports) and long format (one row per period).
+    </p>
     <div class="grid2">
       <div>
         <label style="font-weight:600;font-size:13px;margin-bottom:8px;display:block">File 1 — Source</label>
-        <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()" ondragover="ev(event,'zone1')" ondragleave="uv('zone1')" ondrop="dp(event,1)">
+        <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()"
+          ondragover="ev(event,'zone1')" ondragleave="uv('zone1')" ondrop="dp(event,1)">
           <input type="file" id="f1" accept=".xlsx,.xls,.csv" onchange="lf(1,this)">
           <p style="font-size:13px;color:#666" id="z1t">Click or drag file here</p>
           <p style="font-size:11px;color:#aaa;margin-top:4px">Excel or CSV</p>
@@ -133,7 +133,8 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
       </div>
       <div>
         <label style="font-weight:600;font-size:13px;margin-bottom:8px;display:block">File 2 — Comparison</label>
-        <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()" ondragover="ev(event,'zone2')" ondragleave="uv('zone2')" ondrop="dp(event,2)">
+        <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()"
+          ondragover="ev(event,'zone2')" ondragleave="uv('zone2')" ondrop="dp(event,2)">
           <input type="file" id="f2" accept=".xlsx,.xls,.csv" onchange="lf(2,this)">
           <p style="font-size:13px;color:#666" id="z2t">Click or drag file here</p>
           <p style="font-size:11px;color:#aaa;margin-top:4px">Excel or CSV</p>
@@ -147,19 +148,19 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
     </div>
     <div class="actions">
       <span style="font-size:12px;color:#aaa">All data stays in your browser</span>
-      <button class="btn btn-primary" id="s1btn" onclick="goS(2)" disabled>Next: configure pivot →</button>
+      <button class="btn btn-primary" id="s1btn" onclick="goS(2)" disabled>Next: map columns →</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ STEP 2: PIVOT CONFIG ═══ -->
+<!-- ═══ STEP 2: CONFIG ═══ -->
 
 <div id="step2" class="step">
 
-  <!-- Row dimension -->
+  <!-- Row key -->
 
   <div class="card">
-    <span class="slbl">Row dimension — what appears as rows (e.g. LCIN, Cost Centre)</span>
+    <span class="slbl">Row key — what to match rows on (e.g. LCIN, Cost Centre code)</span>
     <div class="dim-row">
       <div>
         <label>File 1 column</label>
@@ -183,108 +184,89 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
     </div>
   </div>
 
-  <!-- Column dimension -->
+  <!-- Column pair mapping -->
 
   <div class="card">
-    <span class="slbl">Column dimension — what spreads across columns (e.g. Period, Month)</span>
-    <div class="dim-row">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div>
-        <label>File 1 column</label>
-        <select id="col1"></select>
+        <span class="slbl" style="margin-bottom:2px">Column mapping — which column in File 1 matches which in File 2</span>
+        <p style="font-size:12px;color:#666">Each pair becomes one column in the results. Auto-suggest matches by date format.</p>
       </div>
-      <div class="dim-arrow">↔</div>
-      <div>
-        <label>File 2 column</label>
-        <select id="col2"></select>
-      </div>
-      <div>
-        <label>Normalise as</label>
-        <select id="colnorm">
-          <option value="date">Date (MMM-YY)</option>
-          <option value="text">Text (trim)</option>
-          <option value="num">Number</option>
-          <option value="int">Integer</option>
-          <option value="lower">Lowercase</option>
-          <option value="upper">Uppercase</option>
-        </select>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="autoSuggestPairs()">⚡ Auto-suggest</button>
+        <button class="btn btn-sm" onclick="addPairRow()">+ Add pair</button>
       </div>
     </div>
+    <table class="pair-table">
+      <thead>
+        <tr>
+          <th style="width:34%">File 1 column</th>
+          <th style="width:6%;text-align:center">↔</th>
+          <th style="width:34%">File 2 column</th>
+          <th style="width:18%">Label in output</th>
+          <th style="width:8%"></th>
+        </tr>
+      </thead>
+      <tbody id="pairList"></tbody>
+    </table>
+    <p id="pairMsg" style="font-size:12px;color:#888;margin-top:8px"></p>
   </div>
 
-  <!-- Values -->
-
-  <div class="card">
-    <span class="slbl">Values</span>
-    <div class="grid2">
-      <div>
-        <div class="grid2" style="margin-bottom:0">
-          <div>
-            <label>File 1 — amount column</label>
-            <select id="amt1"></select>
-          </div>
-          <div>
-            <label>Aggregation</label>
-            <select id="agg1">
-              <option value="sum">Sum</option>
-              <option value="count">Count</option>
-              <option value="avg">Average</option>
-              <option value="min">Min</option>
-              <option value="max">Max</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="grid2" style="margin-bottom:0">
-          <div>
-            <label>File 2 — amount column</label>
-            <select id="amt2"></select>
-          </div>
-          <div>
-            <label>Aggregation</label>
-            <select id="agg2">
-              <option value="sum">Sum</option>
-              <option value="count">Count</option>
-              <option value="avg">Average</option>
-              <option value="min">Min</option>
-              <option value="max">Max</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
+  <!-- Aggregation + filters -->
 
   <div class="grid2">
     <div class="card">
-      <span class="slbl">File 1 filters <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional — e.g. Version = Actual)</span></span>
-      <div id="flist1"></div>
-      <button class="btn btn-sm" onclick="addF(1)" style="margin-top:4px">+ Add filter</button>
+      <span class="slbl">Aggregation &amp; value</span>
+      <div class="grid2" style="margin-bottom:12px">
+        <div>
+          <label>File 1 — if multiple rows share same key</label>
+          <select id="agg1">
+            <option value="sum">Sum</option>
+            <option value="count">Count rows</option>
+            <option value="avg">Average</option>
+            <option value="min">Min</option>
+            <option value="max">Max</option>
+          </select>
+        </div>
+        <div>
+          <label>File 2</label>
+          <select id="agg2">
+            <option value="sum">Sum</option>
+            <option value="count">Count rows</option>
+            <option value="avg">Average</option>
+            <option value="min">Min</option>
+            <option value="max">Max</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label>File 1 label</label>
+          <input type="text" id="lbl1" placeholder="e.g. Essbase">
+        </div>
+        <div>
+          <label>File 2 label</label>
+          <input type="text" id="lbl2" placeholder="e.g. GL">
+        </div>
+      </div>
     </div>
     <div class="card">
-      <span class="slbl">File 2 filters <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:#aaa">(optional)</span></span>
-      <div id="flist2"></div>
-      <button class="btn btn-sm" onclick="addF(2)" style="margin-top:4px">+ Add filter</button>
-    </div>
-  </div>
-
-  <!-- Labels & tolerance -->
-
-  <div class="card">
-    <div class="grid3">
-      <div>
-        <label>File 1 label</label>
-        <input type="text" id="lbl1" placeholder="e.g. Essbase">
-      </div>
-      <div>
-        <label>File 2 label</label>
-        <input type="text" id="lbl2" placeholder="e.g. GL">
-      </div>
-      <div>
-        <label>Tolerance (ignore differences below)</label>
+      <span class="slbl">Tolerance &amp; filters</span>
+      <div style="margin-bottom:12px">
+        <label>Ignore differences smaller than</label>
         <input type="number" id="tol" value="0.01" step="0.01" min="0">
+      </div>
+      <div class="grid2">
+        <div>
+          <span class="slbl" style="margin-bottom:4px">File 1 filters</span>
+          <div id="flist1"></div>
+          <button class="btn btn-sm" onclick="addF(1)" style="margin-top:4px">+ Add filter</button>
+        </div>
+        <div>
+          <span class="slbl" style="margin-bottom:4px">File 2 filters</span>
+          <div id="flist2"></div>
+          <button class="btn btn-sm" onclick="addF(2)" style="margin-top:4px">+ Add filter</button>
+        </div>
       </div>
     </div>
   </div>
@@ -299,22 +281,18 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
 
 <div id="step3" class="step">
   <div id="statBar" class="stat-bar"></div>
-
   <div class="toolbar">
     <button class="btn btn-sm active" id="fa" onclick="setView('all',this)">All rows</button>
     <button class="btn btn-sm" id="fb" onclick="setView('breaks',this)">Break rows only</button>
     <button class="btn btn-sm" onclick="exportCSV()" style="margin-left:auto">Export CSV ↓</button>
   </div>
-
   <div class="pivot-wrap">
     <table class="pivot-table" id="pivotTable"></table>
   </div>
-
-  <p style="font-size:11px;color:#888;margin-top:8px">Click any difference cell to see source rows behind that number.</p>
-
+  <p style="font-size:11px;color:#888;margin-top:8px">Click any red cell to see source rows behind that number.</p>
   <div class="actions">
     <div class="actions-left">
-      <button class="btn" onclick="goS(2)">← Edit filters &amp; values</button>
+      <button class="btn" onclick="goS(2)">← Edit mapping</button>
       <button class="btn btn-danger" onclick="goS(1);resetAll()">↺ Start over</button>
     </div>
     <span id="rcount" style="font-size:12px;color:#888"></span>
@@ -325,15 +303,22 @@ code { font-size: 11px; background: #f0f0f0; padding: 1px 5px; border-radius: 3p
 <div class="footer">All data stays in your browser — nothing is uploaded or shared.</div>
 
 <script>
-// ═══ STATE ═══
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
 let D = {1:[], 2:[]};
 let WB = {1:null, 2:null};
-let pivotData = null;   // built pivot comparison
+let pivotResult = null;
+let colPairs = [];        // [{f1col, f2col, label}]
 let meta = {};
 let fcC = {1:0, 2:0};
+let pairC = 0;
 let currentView = 'all';
+let openDrill = null;
 
-// ═══ FILE LOADING ═══
+// ═══════════════════════════════════════════
+//  FILE LOADING + SHEET SELECTION
+// ═══════════════════════════════════════════
 function ev(e,id){ e.preventDefault(); document.getElementById(id).classList.add('drag'); }
 function uv(id){ document.getElementById(id).classList.remove('drag'); }
 function dp(e,n){ e.preventDefault(); uv('zone'+n); const f=e.dataTransfer.files[0]; if(f) pf(n,f); }
@@ -344,11 +329,9 @@ function pf(n, file) {
   r.onload = e => {
     let wb;
     try {
-      if (file.name.toLowerCase().endsWith('.csv')) {
-        wb = XLSX.read(e.target.result, {type:'string'});
-      } else {
-        wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      }
+      wb = file.name.toLowerCase().endsWith('.csv')
+        ? XLSX.read(e.target.result, {type:'string'})
+        : XLSX.read(new Uint8Array(e.target.result), {type:'array'});
     } catch(err) { alert('Could not read: ' + file.name); return; }
     WB[n] = wb;
     document.getElementById('zone'+n).classList.add('loaded');
@@ -361,8 +344,7 @@ function pf(n, file) {
       document.getElementById('stabs'+n).innerHTML = wb.SheetNames.map(s =>
         `<div class="sheet-tab" onclick="selectSheet(${n},'${s.replace(/'/g,"\\'")}',this)">${s}</div>`
       ).join('');
-      D[n] = [];
-      checkReady();
+      D[n] = []; checkReady();
     }
   };
   if (file.name.toLowerCase().endsWith('.csv')) r.readAsText(file);
@@ -379,8 +361,7 @@ function loadSheet(n, name, fileName) {
   const data = XLSX.utils.sheet_to_json(WB[n].Sheets[name], {defval:''});
   D[n] = data;
   const numCols = Object.keys(data[0]||{}).length;
-  const label = (fileName ? fileName + ' — ' : '') + name;
-  document.getElementById('z'+n+'t').textContent = label;
+  document.getElementById('z'+n+'t').textContent = (fileName ? fileName + ' — ' : '') + name;
   document.getElementById('sinfo'+n).textContent =
     '✓ "' + name + '" — ' + data.length + ' rows, ' + numCols + ' columns';
   checkReady();
@@ -390,99 +371,207 @@ function checkReady() {
   document.getElementById('s1btn').disabled = !(D[1].length && D[2].length);
 }
 
-// ═══ STEP NAV ═══
+// ═══════════════════════════════════════════
+//  DATE PARSING (handles all common formats)
+// ═══════════════════════════════════════════
+const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
+  january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function parseDate(s) {
+  // Handles: Jan-26, jan26, january2026, 012026 (MMYYYY), 202601 (YYYYMM), 20260131 (YYYYMMDD)
+  const n = String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const num = n.replace(/[a-z]/g,''), alpha = n.replace(/[0-9]/g,'');
+
+  // Alpha month name: jan26, jan2026, feb-26
+  if (alpha && MONTHS[alpha] && num.length >= 2) {
+    const y = num.length <= 2 ? 2000 + parseInt(num) : parseInt(num.slice(-4));
+    return {m: MONTHS[alpha], y};
+  }
+  // 6 digits
+  if (/^\d{6}$/.test(n)) {
+    const m1 = parseInt(n.slice(0,2));
+    if (m1 >= 1 && m1 <= 12) return {m: m1, y: parseInt(n.slice(2))};  // MMYYYY
+    const y2 = parseInt(n.slice(0,4)), m2 = parseInt(n.slice(4,6));
+    if (m2 >= 1 && m2 <= 12) return {m: m2, y: y2};                    // YYYYMM
+  }
+  // 8 digits — YYYYMMDD
+  if (/^\d{8}$/.test(n)) {
+    const y = parseInt(n.slice(0,4)), m = parseInt(n.slice(4,6));
+    if (m >= 1 && m <= 12) return {m, y};
+  }
+  // Slash/dash separated: 31/01/2026 or 2026-01-31
+  if (/[\/\-]/.test(String(s))) {
+    const d = new Date(s);
+    if (!isNaN(d)) return {m: d.getMonth()+1, y: d.getFullYear()};
+  }
+  return null;
+}
+
+function dateToLabel(pd) {
+  return pd ? MN[pd.m-1] + '-' + String(pd.y).slice(-2) : null;
+}
+
+function dateSortKey(pd) {
+  return pd ? pd.y * 12 + pd.m : 0;
+}
+
+// ═══════════════════════════════════════════
+//  COLUMN PAIR MANAGEMENT
+// ═══════════════════════════════════════════
+function cols(n) { return Object.keys(D[n][0] || {}); }
+
+function selOpts(n, selected) {
+  return cols(n).map(c => `<option${c===selected?' selected':''}>${c}</option>`).join('');
+}
+
+function addPairRow(f1col, f2col, label, score) {
+  const id = 'pair_' + (++pairC);
+  const confCls = score >= 90 ? 'conf-high' : score >= 50 ? 'conf-med' : 'conf-low';
+  const confTxt = score >= 90 ? '✓ Date match' : score >= 50 ? '~ Partial' : '? Manual';
+  const lbl = label || (f1col || '');
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.innerHTML = `
+    <td><select class="pf1" onchange="updatePairLabel('${id}')">${selOpts(1, f1col)}</select></td>
+    <td style="text-align:center">
+      ${score !== undefined ? `<span class="conf-badge ${confCls}">${confTxt}</span>` : '<span style="color:#ccc;font-size:16px">↔</span>'}
+    </td>
+    <td><select class="pf2" onchange="updatePairLabel('${id}')">${selOpts(2, f2col)}</select></td>
+    <td><input type="text" class="plbl" value="${lbl}" placeholder="auto"></td>
+    <td><button class="rm-btn" onclick="removePair('${id}')">×</button></td>`;
+  document.getElementById('pairList').appendChild(tr);
+  updatePairMsg();
+}
+
+function removePair(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  updatePairMsg();
+}
+
+function updatePairLabel(id) {
+  // Auto-fill label from F1 column name if label is still blank or matches old F1 col
+  const row = document.getElementById(id);
+  const f1val = row.querySelector('.pf1').value;
+  const lblInp = row.querySelector('.plbl');
+  // Only auto-update if label is blank or was previously the old col name
+  if (!lblInp.value || lblInp.dataset.auto === 'true') {
+    const pd = parseDate(f1val);
+    lblInp.value = pd ? dateToLabel(pd) : f1val;
+    lblInp.dataset.auto = 'true';
+  }
+  updatePairMsg();
+}
+
+function updatePairMsg() {
+  const count = document.querySelectorAll('#pairList tr').length;
+  document.getElementById('pairMsg').textContent =
+    count === 0 ? 'No column pairs added yet. Click "Auto-suggest" or "+ Add pair".' :
+    count + ' column pair' + (count===1?'':'s') + ' configured.';
+}
+
+function getPairs() {
+  return Array.from(document.querySelectorAll('#pairList tr')).map(tr => ({
+    f1col: tr.querySelector('.pf1').value,
+    f2col: tr.querySelector('.pf2').value,
+    label: tr.querySelector('.plbl').value || tr.querySelector('.pf1').value
+  }));
+}
+
+function autoSuggestPairs() {
+  // Find date-like columns in each file and match them
+  const c1 = cols(1), c2 = cols(2);
+  const dateCols1 = c1.map(c => ({col:c, pd: parseDate(c)})).filter(x => x.pd);
+  const dateCols2 = c2.map(c => ({col:c, pd: parseDate(c)})).filter(x => x.pd);
+
+  // Clear existing pairs
+  document.getElementById('pairList').innerHTML = '';
+  pairC = 0;
+
+  if (dateCols1.length === 0 && dateCols2.length === 0) {
+    // No date-like columns found — let user pick manually
+    addPairRow(c1[0], c2[0], '', 0);
+    document.getElementById('pairMsg').textContent =
+      'No date-format columns detected. Please select column pairs manually.';
+    return;
+  }
+
+  // Match date columns from F1 to F2 by period
+  const used2 = new Set();
+  const pairs = [];
+
+  dateCols1.forEach(x1 => {
+    // Find matching period in F2
+    let best = null, bestScore = -1;
+    dateCols2.forEach(x2 => {
+      if (used2.has(x2.col)) return;
+      if (x2.pd.m === x1.pd.m && x2.pd.y === x1.pd.y) {
+        if (100 > bestScore) { bestScore = 100; best = x2; }
+      }
+    });
+    if (best) {
+      used2.add(best.col);
+      pairs.push({f1: x1.col, f2: best.col, label: dateToLabel(x1.pd), score: 100, sortKey: dateSortKey(x1.pd)});
+    } else {
+      // No match found — still add as unmatched for user to fix
+      pairs.push({f1: x1.col, f2: dateCols2[0]?.col || c2[0], label: dateToLabel(x1.pd), score: 0, sortKey: dateSortKey(x1.pd)});
+    }
+  });
+
+  // Sort chronologically
+  pairs.sort((a,b) => a.sortKey - b.sortKey);
+  pairs.forEach(p => addPairRow(p.f1, p.f2, p.label, p.score));
+
+  const matched = pairs.filter(p => p.score === 100).length;
+  document.getElementById('pairMsg').textContent =
+    `${matched} of ${pairs.length} pairs matched by date. Review and adjust any marked with ~ or ?.`;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
 function goS(n) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById('step'+n).classList.add('active');
   if (n === 2) populateConfig();
   const runBtn = document.getElementById('runBtn');
-  if (runBtn) runBtn.textContent = (n===2 && pivotData) ? 'Re-run reconciliation' : 'Run reconciliation';
-}
-
-// ═══ CONFIG POPULATION ═══
-function cols(n) { return Object.keys(D[n][0] || {}); }
-
-function fillSel(id, n, guess) {
-  const c = cols(n);
-  const el = document.getElementById(id);
-  el.innerHTML = c.map(col => `<option${col===guess?' selected':''}>${col}</option>`).join('');
-}
-
-const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
-  january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-
-function parseColDate(s) {
-  const n = s.toLowerCase().replace(/[^a-z0-9]/g,'');
-  const num = n.replace(/[a-z]/g,''), alpha = n.replace(/[0-9]/g,'');
-  if (alpha && MONTHS[alpha] && num.length >= 2) {
-    const y = num.length===2 ? 2000+parseInt(num) : parseInt(num.slice(-4));
-    return {m: MONTHS[alpha], y};
-  }
-  if (/^\d{6}$/.test(n)) { const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(2)); if(m>=1&&m<=12) return{m,y:2000+y}; }
-  if (/^\d{8}$/.test(n)) { const m=parseInt(n.slice(0,2)),y=parseInt(n.slice(-4)); if(m>=1&&m<=12) return{m,y}; }
-  return null;
-}
-
-function colSim(a, b) {
-  const da = parseColDate(a), db = parseColDate(b);
-  if (da && db && da.m===db.m && da.y===db.y) return 95;
-  const na = a.toLowerCase().replace(/[^a-z0-9]/g,''), nb = b.toLowerCase().replace(/[^a-z0-9]/g,'');
-  if (na===nb) return 100;
-  if (na.includes(nb)||nb.includes(na)) return 70;
-  return 0;
-}
-
-function guessMatch(col1, cols2) {
-  let best = cols2[0], bestScore = -1;
-  cols2.forEach(c => { const s = colSim(col1,c); if(s>bestScore){bestScore=s;best=c;} });
-  return best;
-}
-
-function looksLikePeriod(col) {
-  return parseColDate(col) !== null ||
-    ['period','month','mth','date','yr','year','yyyymm','mmyyyy'].some(k => col.toLowerCase().includes(k));
-}
-function looksLikeAmount(col) {
-  return ['amount','amt','value','balance','total','sum','lccy','fccy'].some(k => col.toLowerCase().includes(k));
-}
-function looksLikeKey(col) {
-  return ['lcin','code','id','centre','center','cc','entity','account','dept'].some(k => col.toLowerCase().includes(k));
+  if (runBtn) runBtn.textContent = (n===2 && pivotResult) ? 'Re-run' : 'Run reconciliation';
 }
 
 function populateConfig() {
   const c1 = cols(1), c2 = cols(2);
 
-  // Guess row dimension
-  const rowGuess1 = c1.find(looksLikeKey) || c1[0];
-  const rowGuess2 = guessMatch(rowGuess1, c2);
-  fillSel('row1', 1, rowGuess1);
-  fillSel('row2', 2, rowGuess2);
-
-  // Guess column dimension (period)
-  const colGuess1 = c1.find(looksLikePeriod) || c1[1] || c1[0];
-  const colGuess2 = guessMatch(colGuess1, c2);
-  fillSel('col1', 1, colGuess1);
-  fillSel('col2', 2, colGuess2);
-  // Auto-set normalise to date if it looks like a period
-  document.getElementById('colnorm').value = looksLikePeriod(colGuess1) ? 'date' : 'text';
-
-  // Amount columns
-  const amtGuess1 = c1.find(looksLikeAmount) || c1[c1.length-1];
-  const amtGuess2 = guessMatch(amtGuess1, c2);
-  fillSel('amt1', 1, amtGuess1);
-  fillSel('amt2', 2, amtGuess2);
+  // Row key — guess LCIN-like column
+  const guessKey1 = c1.find(c => /lcin|code|id|centre|center|cc|entity|acct/i.test(c)) || c1[0];
+  const guessKey2 = c2.find(c => /lcin|code|id|centre|center|cc|entity|acct/i.test(c)) ||
+    c2.find(c => c.toLowerCase() === guessKey1.toLowerCase()) || c2[0];
+  fillSel('row1', 1, guessKey1);
+  fillSel('row2', 2, guessKey2);
 
   // Clear filters
   document.getElementById('flist1').innerHTML = '';
   document.getElementById('flist2').innerHTML = '';
   fcC = {1:0, 2:0};
+
+  // Auto-suggest pairs if pairList is empty
+  if (document.querySelectorAll('#pairList tr').length === 0) {
+    autoSuggestPairs();
+  }
 }
 
-// ═══ FILTERS ═══
+function fillSel(id, n, sel) {
+  document.getElementById(id).innerHTML = cols(n).map(c =>
+    `<option${c===sel?' selected':''}>${c}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════
+//  FILTERS (data-driven dropdowns)
+// ═══════════════════════════════════════════
 function uniqueVals(n, colName) {
   const seen = new Set();
   D[n].forEach(row => { const v = String(row[colName]||'').trim(); if(v) seen.add(v); });
-  return Array.from(seen).sort((a,b) => a.localeCompare(b, undefined, {numeric:true})).slice(0, 300);
+  return Array.from(seen).sort((a,b) => a.localeCompare(b,undefined,{numeric:true})).slice(0,300);
 }
 
 function updateFilterValues(n, id) {
@@ -497,19 +586,14 @@ function updateFilterValues(n, id) {
   if (numericOp || vals.length === 0) {
     if (valEl && valEl.tagName !== 'INPUT') {
       const inp = document.createElement('input');
-      inp.className = 'fv'; inp.type = 'text'; inp.placeholder = 'value'; inp.value = currentVal;
+      inp.className='fv'; inp.type='text'; inp.placeholder='value'; inp.value=currentVal;
       valEl.replaceWith(inp);
     }
   } else {
-    const opts = `<option value="">-- select --</option>` + vals.map(v =>
-      `<option${v===currentVal?' selected':''}>${v}</option>`).join('');
-    if (valEl && valEl.tagName === 'SELECT') {
-      valEl.innerHTML = opts;
-    } else {
-      const sel = document.createElement('select');
-      sel.className = 'fv'; sel.innerHTML = opts;
-      if (valEl) valEl.replaceWith(sel); else row.appendChild(sel);
-    }
+    const opts = `<option value="">-- select --</option>` +
+      vals.map(v => `<option${v===currentVal?' selected':''}>${v}</option>`).join('');
+    if (valEl && valEl.tagName==='SELECT') { valEl.innerHTML=opts; }
+    else { const sel=document.createElement('select'); sel.className='fv'; sel.innerHTML=opts; valEl.replaceWith(sel); }
   }
 }
 
@@ -547,321 +631,331 @@ function applyFs(data, filters) {
   }));
 }
 
-// ═══ NORMALISE ═══
-function normalise(val, type) {
+// ═══════════════════════════════════════════
+//  NORMALISE
+// ═══════════════════════════════════════════
+function normaliseKey(val, type) {
   const s = String(val||'').trim();
   if (type==='num') return String(parseFloat(s.replace(/,/g,''))||0);
   if (type==='int') return String(parseInt(s.replace(/,/g,''))||0);
   if (type==='lower') return s.toLowerCase();
   if (type==='upper') return s.toUpperCase();
-  if (type==='date') {
-    // Try JS date parse
-    const d = new Date(s);
-    if (!isNaN(d) && s.length > 4) return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}).replace(' ','-');
-    // Try MMYYYY / YYYYMM patterns
-    const pd = parseColDate(s);
-    if (pd) {
-      const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return mn[pd.m-1] + '-' + String(pd.y).slice(-2);
-    }
-    return s.toLowerCase();
-  }
   return s;
 }
 
-// ═══ PIVOT BUILD ═══
-function buildPivot(data, rowCol, colCol, amtCol, aggType, rowNorm, colNorm, filters) {
+function toNum(val) {
+  return parseFloat(String(val||'').replace(/,/g,'')) || 0;
+}
+
+// ═══════════════════════════════════════════
+//  BUILD PIVOT FROM COLUMN PAIRS
+// ═══════════════════════════════════════════
+function buildPivotFromPairs(data, rowCol, rowNorm, pairs, aggType, filters) {
   const filtered = applyFs(data, filters);
-  const cells = {};    // cells[rowKey][colKey] = aggregated value
-  const counts = {};   // for avg
-  const src = {};      // src[rowKey][colKey] = [source rows]
+  // cells[rowKey][pairLabel] = value
+  const cells = {};
+  const counts = {};
+  // src[rowKey][pairLabel] = [source rows]
+  const src = {};
   const rowKeys = new Set();
-  const colKeys = new Set();
 
   filtered.forEach(row => {
-    const rk = normalise(row[rowCol], rowNorm);
-    const ck = normalise(row[colCol], colNorm);
-    if (!rk || !ck) return;
+    const rk = normaliseKey(row[rowCol], rowNorm);
+    if (!rk) return;
     rowKeys.add(rk);
-    colKeys.add(ck);
     if (!cells[rk]) cells[rk] = {};
+    if (!counts[rk]) counts[rk] = {};
     if (!src[rk]) src[rk] = {};
-    if (!src[rk][ck]) src[rk][ck] = [];
-    src[rk][ck].push(row);
-    const v = parseFloat(String(row[amtCol]||'').replace(/,/g,'')) || 0;
-    if (aggType==='count') {
-      cells[rk][ck] = (cells[rk][ck]||0) + 1;
-    } else if (aggType==='sum') {
-      cells[rk][ck] = (cells[rk][ck]||0) + v;
-    } else if (aggType==='avg') {
-      cells[rk][ck] = (cells[rk][ck]||0) + v;
-      if (!counts[rk]) counts[rk] = {};
-      counts[rk][ck] = (counts[rk][ck]||0) + 1;
-    } else if (aggType==='min') {
-      cells[rk][ck] = cells[rk][ck]===undefined ? v : Math.min(cells[rk][ck], v);
-    } else if (aggType==='max') {
-      cells[rk][ck] = cells[rk][ck]===undefined ? v : Math.max(cells[rk][ck], v);
-    }
+
+    pairs.forEach(pair => {
+      const col = pair.side === 1 ? pair.f1col : pair.f2col;
+      const lbl = pair.label;
+      const rawVal = row[col];
+      if (rawVal === undefined || rawVal === '') return;  // column not present in this row
+
+      const v = aggType === 'count' ? 1 : toNum(rawVal);
+
+      if (!src[rk][lbl]) src[rk][lbl] = [];
+      src[rk][lbl].push(row);
+
+      if (aggType === 'count') {
+        cells[rk][lbl] = (cells[rk][lbl]||0) + 1;
+      } else if (aggType === 'sum') {
+        cells[rk][lbl] = (cells[rk][lbl]||0) + v;
+      } else if (aggType === 'avg') {
+        cells[rk][lbl] = (cells[rk][lbl]||0) + v;
+        counts[rk][lbl] = (counts[rk][lbl]||0) + 1;
+      } else if (aggType === 'min') {
+        cells[rk][lbl] = cells[rk][lbl]===undefined ? v : Math.min(cells[rk][lbl], v);
+      } else if (aggType === 'max') {
+        cells[rk][lbl] = cells[rk][lbl]===undefined ? v : Math.max(cells[rk][lbl], v);
+      }
+    });
   });
 
-  // Finalise averages
-  if (aggType==='avg') {
+  if (aggType === 'avg') {
     Object.keys(cells).forEach(rk => {
-      Object.keys(cells[rk]).forEach(ck => {
-        if (counts[rk]&&counts[rk][ck]) cells[rk][ck] /= counts[rk][ck];
+      Object.keys(cells[rk]).forEach(lbl => {
+        if (counts[rk]?.[lbl]) cells[rk][lbl] /= counts[rk][lbl];
       });
     });
   }
 
-  // Sort column keys: chronologically if date, else alphabetically
-  const sortedCols = Array.from(colKeys).sort((a, b) => {
-    const da = parseColDate(a), db = parseColDate(b);
-    if (da && db) return (da.y*12+da.m) - (db.y*12+db.m);
-    return a.localeCompare(b, undefined, {numeric:true});
-  });
-  const sortedRows = Array.from(rowKeys).sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
-
-  return { cells, src, rowKeys: sortedRows, colKeys: sortedCols };
+  return {
+    cells,
+    src,
+    rowKeys: Array.from(rowKeys).sort((a,b) => a.localeCompare(b,undefined,{numeric:true}))
+  };
 }
 
-// ═══ RUN RECON ═══
+// ═══════════════════════════════════════════
+//  RUN RECON
+// ═══════════════════════════════════════════
 function runRecon() {
-  const rowCol1 = document.getElementById('row1').value;
-  const rowCol2 = document.getElementById('row2').value;
-  const colCol1 = document.getElementById('col1').value;
-  const colCol2 = document.getElementById('col2').value;
-  const rowNorm = document.getElementById('rownorm').value;
-  const colNorm = document.getElementById('colnorm').value;
-  const amt1   = document.getElementById('amt1').value;
-  const amt2   = document.getElementById('amt2').value;
-  const agg1   = document.getElementById('agg1').value;
-  const agg2   = document.getElementById('agg2').value;
-  const tol    = parseFloat(document.getElementById('tol').value) || 0.01;
-  const lbl1   = document.getElementById('lbl1').value || 'File 1';
-  const lbl2   = document.getElementById('lbl2').value || 'File 2';
+  const pairs = getPairs();
+  if (pairs.length === 0) { alert('Please add at least one column pair.'); return; }
 
-  meta = {rowCol1,rowCol2,colCol1,colCol2,rowNorm,colNorm,amt1,amt2,agg1,agg2,tol,lbl1,lbl2};
+  const rowCol1  = document.getElementById('row1').value;
+  const rowCol2  = document.getElementById('row2').value;
+  const rowNorm  = document.getElementById('rownorm').value;
+  const agg1     = document.getElementById('agg1').value;
+  const agg2     = document.getElementById('agg2').value;
+  const tol      = parseFloat(document.getElementById('tol').value) || 0.01;
+  const lbl1     = document.getElementById('lbl1').value || 'File 1';
+  const lbl2     = document.getElementById('lbl2').value || 'File 2';
+  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs};
 
-  const p1 = buildPivot(D[1], rowCol1, colCol1, amt1, agg1, rowNorm, colNorm, getFs(1));
-  const p2 = buildPivot(D[2], rowCol2, colCol2, amt2, agg2, rowNorm, colNorm, getFs(2));
+  // Tag pairs with their side for buildPivotFromPairs
+  const pairs1 = pairs.map(p => ({...p, side:1}));
+  const pairs2 = pairs.map(p => ({...p, side:2}));
 
-  // Merge row and column keys from both files
-  const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])].sort((a,b) =>
-    a.localeCompare(b, undefined, {numeric:true}));
-  const allCols = [...new Set([...p1.colKeys, ...p2.colKeys])].sort((a,b) => {
-    const da=parseColDate(a),db=parseColDate(b);
-    if(da&&db) return (da.y*12+da.m)-(db.y*12+db.m);
-    return a.localeCompare(b,undefined,{numeric:true});
-  });
+  const fd1 = applyFs(D[1], getFs(1));
+  const fd2 = applyFs(D[2], getFs(2));
 
-  pivotData = {p1, p2, allRows, allCols};
+  // Build separately per side using the correct column names
+  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label})), agg1);
+  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label})), agg2);
+
+  const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])]
+    .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
+
+  pivotResult = {p1, p2, allRows, pairs};
+  colPairs = pairs;
+  currentView = 'all';
   renderPivot();
   goS(3);
 }
 
-// ═══ RENDER PIVOT ═══
+function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType) {
+  // colMaps = [{col, label}]
+  const cells = {}, counts = {}, src = {};
+  const rowKeys = new Set();
+
+  data.forEach(row => {
+    const rk = normaliseKey(row[rowCol], rowNorm);
+    if (!rk) return;
+    rowKeys.add(rk);
+    if (!cells[rk]) { cells[rk]={}; counts[rk]={}; src[rk]={}; }
+
+    colMaps.forEach(({col, label}) => {
+      const rawVal = row[col];
+      if (rawVal===undefined || rawVal==='') return;
+      const v = aggType==='count' ? 1 : toNum(rawVal);
+      if (!src[rk][label]) src[rk][label]=[];
+      src[rk][label].push(row);
+      if (aggType==='count')     cells[rk][label]=(cells[rk][label]||0)+1;
+      else if (aggType==='sum')  cells[rk][label]=(cells[rk][label]||0)+v;
+      else if (aggType==='avg') { cells[rk][label]=(cells[rk][label]||0)+v; counts[rk][label]=(counts[rk][label]||0)+1; }
+      else if (aggType==='min')  cells[rk][label]=cells[rk][label]===undefined?v:Math.min(cells[rk][label],v);
+      else if (aggType==='max')  cells[rk][label]=cells[rk][label]===undefined?v:Math.max(cells[rk][label],v);
+    });
+  });
+
+  if (aggType==='avg') {
+    Object.keys(cells).forEach(rk =>
+      Object.keys(cells[rk]).forEach(lbl => {
+        if (counts[rk]?.[lbl]) cells[rk][lbl] /= counts[rk][lbl];
+      }));
+  }
+
+  return {
+    cells, src,
+    rowKeys: Array.from(rowKeys).sort((a,b) => a.localeCompare(b,undefined,{numeric:true}))
+  };
+}
+
+// ═══════════════════════════════════════════
+//  RENDER PIVOT TABLE
+// ═══════════════════════════════════════════
 function fmt(n) {
   if (n == null) return '—';
   return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 function renderPivot() {
-  if (!pivotData) return;
-  const {p1, p2, allRows, allCols} = pivotData;
-  const {tol, lbl1, lbl2} = meta;
+  if (!pivotResult) return;
+  const {p1, p2, allRows} = pivotResult;
+  const {tol, lbl1, lbl2, pairs} = meta;
+  let matchCells=0, breakCells=0, missCells=0;
 
-  let totalCells=0, breakCells=0, missCells=0, matchCells=0;
-
-  // Filter rows based on current view
   const showRows = currentView==='breaks'
-    ? allRows.filter(rk => {
-        return allCols.some(ck => {
-          const v1=p1.cells[rk]?.[ck], v2=p2.cells[rk]?.[ck];
-          if (v1==null||v2==null) return true;
-          return Math.abs(v1-v2) > tol;
-        });
-      })
+    ? allRows.filter(rk => pairs.some(p => {
+        const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
+        if (v1==null||v2==null) return true;
+        return Math.abs(v1-v2) > tol;
+      }))
     : allRows;
 
-  // Build table HTML
-  let html = '<thead>';
-
-  // Header row 1: LCIN | [period colspan=3] ... | Total colspan=3
-  html += '<tr>';
-  html += `<th class="row-hdr" rowspan="2">${meta.rowCol1===meta.rowCol2 ? meta.rowCol1 : meta.rowCol1+' / '+meta.rowCol2}</th>`;
-  allCols.forEach(ck => {
-    html += `<th colspan="3" style="text-align:center;border-left:1px solid #ddd">${ck}</th>`;
+  // ── Header row 1: row key | [pair label colspan=3] | Total colspan=3
+  let html = '<thead><tr>';
+  html += `<th class="row-hdr" rowspan="2">${meta.rowCol1===meta.rowCol2?meta.rowCol1:meta.rowCol1+' / '+meta.rowCol2}</th>`;
+  pairs.forEach(p => {
+    html += `<th colspan="3" style="text-align:center;border-left:2px solid #ddd">${p.label}</th>`;
   });
   html += `<th colspan="3" class="col-total" style="text-align:center">Total</th>`;
   html += '</tr>';
 
-  // Header row 2: F1 | F2 | Diff (repeated per column)
+  // ── Header row 2: F1 | F2 | Diff per pair
   html += '<tr>';
-  allCols.forEach(() => {
-    html += `<th style="border-left:1px solid #ddd">${lbl1}</th><th>${lbl2}</th><th>Diff</th>`;
+  pairs.forEach(() => {
+    html += `<th style="border-left:2px solid #ddd">${lbl1}</th><th>${lbl2}</th><th>Diff</th>`;
   });
   html += `<th class="col-total">${lbl1}</th><th class="col-total">${lbl2}</th><th class="col-total">Diff</th>`;
-  html += '</tr>';
-  html += '</thead><tbody>';
+  html += '</tr></thead><tbody>';
+
+  const totalCols = pairs.length * 3 + 4;
 
   showRows.forEach((rk, ri) => {
-    let rowTotal1=0, rowTotal2=0;
-    let rowHasBreak=false;
-
-    // First pass: compute totals
-    allCols.forEach(ck => {
-      const v1 = p1.cells[rk]?.[ck] ?? null;
-      const v2 = p2.cells[rk]?.[ck] ?? null;
-      if (v1!=null) rowTotal1 += v1;
-      if (v2!=null) rowTotal2 += v2;
+    let tot1=0, tot2=0;
+    pairs.forEach(p => {
+      const v1=p1.cells[rk]?.[p.label], v2=p2.cells[rk]?.[p.label];
+      if (v1!=null) tot1+=v1;
+      if (v2!=null) tot2+=v2;
     });
-    const rowTotalDiff = rowTotal1 - rowTotal2;
-    if (Math.abs(rowTotalDiff) > tol) rowHasBreak = true;
+    const totDiff = tot1 - tot2;
 
     html += `<tr id="pr_${ri}">`;
     html += `<td class="row-key">${rk}</td>`;
 
-    allCols.forEach(ck => {
-      const v1 = p1.cells[rk]?.[ck] ?? null;
-      const v2 = p2.cells[rk]?.[ck] ?? null;
-      totalCells++;
-
-      let diffClass='', diffVal='';
+    pairs.forEach(p => {
+      const v1=p1.cells[rk]?.[p.label]??null;
+      const v2=p2.cells[rk]?.[p.label]??null;
+      let diffCls='', diffTxt='';
       if (v1==null || v2==null) {
-        diffClass='cell-miss'; diffVal='—'; missCells++;
+        diffCls='cell-miss'; diffTxt='—'; missCells++;
       } else {
-        const diff = v1 - v2;
-        if (Math.abs(diff) <= tol) {
-          diffClass='cell-match cell-zero'; diffVal='✓'; matchCells++;
-        } else {
-          diffClass='cell-break'; diffVal=fmt(diff); breakCells++;
-        }
+        const diff=v1-v2;
+        if (Math.abs(diff)<=tol) { diffCls='cell-match cell-zero'; diffTxt='✓'; matchCells++; }
+        else { diffCls='cell-break'; diffTxt=fmt(diff); breakCells++; }
       }
-
-      const hasSrc = (p1.src[rk]?.[ck]?.length || p2.src[rk]?.[ck]?.length);
-      const clickable = hasSrc ? `style="cursor:pointer" onclick="toggleCell('${rk}','${ck}',${ri})"` : '';
-      html += `<td style="border-left:1px solid #eee">${v1!=null?fmt(v1):'—'}</td>`;
+      const clickable = diffCls.includes('break')||diffCls.includes('miss')
+        ? `onclick="toggleDrill('${rk.replace(/'/g,"\\'")}','${p.label.replace(/'/g,"\\'")}',${ri})"` : '';
+      html += `<td style="border-left:2px solid #eee">${v1!=null?fmt(v1):'—'}</td>`;
       html += `<td>${v2!=null?fmt(v2):'—'}</td>`;
-      html += `<td class="${diffClass}" ${clickable}>${diffVal}</td>`;
+      html += `<td class="${diffCls}" ${clickable}>${diffTxt}</td>`;
     });
 
-    // Row totals
-    const totalDiffClass = Math.abs(rowTotalDiff)>tol ? 'col-total cell-break' : 'col-total cell-match';
-    html += `<td class="col-total">${fmt(rowTotal1)}</td>`;
-    html += `<td class="col-total">${fmt(rowTotal2)}</td>`;
-    html += `<td class="${totalDiffClass}">${Math.abs(rowTotalDiff)<=tol?'✓':fmt(rowTotalDiff)}</td>`;
+    const totCls = Math.abs(totDiff)>tol ? 'col-total cell-break' : 'col-total cell-match';
+    html += `<td class="col-total">${fmt(tot1)}</td>`;
+    html += `<td class="col-total">${fmt(tot2)}</td>`;
+    html += `<td class="${totCls}">${Math.abs(totDiff)<=tol?'✓':fmt(totDiff)}</td>`;
     html += '</tr>';
-
-    // Drill-down row (hidden, filled on click)
-    html += `<tr class="drill-row" id="drill_${ri}">`;
-    html += `<td colspan="${allCols.length*3+4}"><div class="drill-panel" id="drillcontent_${ri}"></div></td>`;
-    html += '</tr>';
+    html += `<tr class="drill-row" id="drill_${ri}"><td colspan="${totalCols}" style="padding:0"><div class="drill-panel" id="dc_${ri}"></div></td></tr>`;
   });
 
   html += '</tbody>';
   document.getElementById('pivotTable').innerHTML = html;
 
-  // Stats
   document.getElementById('statBar').innerHTML = `
     <div class="stat green"><div class="stat-n">${matchCells}</div><div class="stat-l">Matched cells</div></div>
-    <div class="stat red"><div class="stat-n">${breakCells}</div><div class="stat-l">Break cells</div></div>
+    <div class="stat red"><div class="stat-n">${breakCells}</div><div class="stat-l">Breaks</div></div>
     <div class="stat amber"><div class="stat-n">${missCells}</div><div class="stat-l">Missing</div></div>
     <div class="stat"><div class="stat-n">${showRows.length}</div><div class="stat-l">Rows shown</div></div>`;
   document.getElementById('rcount').textContent = showRows.length + ' of ' + allRows.length + ' rows';
 }
 
-// ═══ DRILL DOWN ═══
-let openDrill = null;
-
-function toggleCell(rk, ck, ri) {
+// ═══════════════════════════════════════════
+//  DRILL DOWN
+// ═══════════════════════════════════════════
+function toggleDrill(rk, label, ri) {
   const drillRow = document.getElementById('drill_'+ri);
-  const key = rk+'§'+ck+'§'+ri;
-  if (openDrill===key) {
-    drillRow.style.display='none';
-    openDrill=null;
-    return;
-  }
-  // Close any open drill
+  const key = rk+'§'+label+'§'+ri;
+  if (openDrill===key) { drillRow.style.display='none'; openDrill=null; return; }
   if (openDrill) {
-    const parts = openDrill.split('§');
-    const prevRow = document.getElementById('drill_'+parts[2]);
-    if (prevRow) prevRow.style.display='none';
+    const prev = document.getElementById('drill_'+openDrill.split('§')[2]);
+    if (prev) prev.style.display='none';
   }
   openDrill = key;
+  const {p1,p2} = pivotResult;
+  const src1 = p1.src[rk]?.[label]||[];
+  const src2 = p2.src[rk]?.[label]||[];
 
-  const {p1, p2} = pivotData;
-  const src1 = p1.src[rk]?.[ck] || [];
-  const src2 = p2.src[rk]?.[ck] || [];
-
-  function buildSubTbl(rows, label, amtCol) {
-    if (!rows.length) return `<p class="dlbl" style="color:#888;margin-bottom:8px">No source rows in ${label} for this cell</p>`;
-    const allCols = Object.keys(rows[0]);
-    const hdrs = allCols.map(c=>`<th>${c}</th>`).join('');
-    const trs = rows.map(row =>
-      `<tr>${allCols.map(c => `<td${c===amtCol?' style="text-align:right;font-weight:600"':''}>${row[c]!=null&&row[c]!==''?row[c]:'—'}</td>`).join('')}</tr>`
-    ).join('');
-    return `<p class="dlbl">${label} — ${rows.length} source row${rows.length!==1?'s':''} for <strong>${rk}</strong> / <strong>${ck}</strong></p>
-      <div class="drill-tbl-wrap"><table><thead><tr>${hdrs}</tr></thead><tbody>${trs}</tbody></table></div>`;
+  function mkTbl(rows, lbl) {
+    if (!rows.length) return `<p class="dlbl" style="color:#888;margin-bottom:8px">No source rows in ${lbl}</p>`;
+    const ks=Object.keys(rows[0]);
+    return `<p class="dlbl">${lbl} — ${rows.length} row${rows.length!==1?'s':''} for <strong>${rk}</strong> / <strong>${label}</strong></p>
+      <div class="drill-tbl-wrap"><table>
+        <thead><tr>${ks.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(row=>`<tr>${ks.map(k=>`<td>${row[k]!=null&&row[k]!==''?row[k]:'—'}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>`;
   }
 
-  document.getElementById('drillcontent_'+ri).innerHTML =
-    buildSubTbl(src1, meta.lbl1, meta.amt1) + buildSubTbl(src2, meta.lbl2, meta.amt2);
-  drillRow.style.display = '';
+  document.getElementById('dc_'+ri).innerHTML = mkTbl(src1, meta.lbl1) + mkTbl(src2, meta.lbl2);
+  drillRow.style.display='';
 }
 
-// ═══ VIEW TOGGLE ═══
+// ═══════════════════════════════════════════
+//  VIEW TOGGLE + EXPORT
+// ═══════════════════════════════════════════
 function setView(type, btn) {
   document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  currentView = type;
-  renderPivot();
+  currentView=type; renderPivot();
 }
 
-// ═══ EXPORT ═══
 function exportCSV() {
-  if (!pivotData) return;
-  const {p1, p2, allRows, allCols} = pivotData;
-  const {tol, lbl1, lbl2} = meta;
-  const rows = [];
-
-  // Header
-  const hdr = ['Row Key'];
-  allCols.forEach(ck => { hdr.push(ck+' ('+lbl1+')', ck+' ('+lbl2+')', ck+' Diff', ck+' Status'); });
-  hdr.push('Total '+lbl1, 'Total '+lbl2, 'Total Diff', 'Total Status');
+  if (!pivotResult) return;
+  const {p1,p2,allRows} = pivotResult;
+  const {tol,lbl1,lbl2,pairs} = meta;
+  const rows=[];
+  const hdr=['Row Key'];
+  pairs.forEach(p=>{ hdr.push(p.label+' ('+lbl1+')',p.label+' ('+lbl2+')',p.label+' Diff',p.label+' Status'); });
+  hdr.push('Total '+lbl1,'Total '+lbl2,'Total Diff','Total Status');
   rows.push(hdr);
-
-  allRows.forEach(rk => {
-    const row = [rk];
-    let tot1=0, tot2=0;
-    allCols.forEach(ck => {
-      const v1=p1.cells[rk]?.[ck]??null, v2=p2.cells[rk]?.[ck]??null;
-      if(v1!=null) tot1+=v1; if(v2!=null) tot2+=v2;
+  allRows.forEach(rk=>{
+    const row=[rk]; let t1=0,t2=0;
+    pairs.forEach(p=>{
+      const v1=p1.cells[rk]?.[p.label]??null,v2=p2.cells[rk]?.[p.label]??null;
+      if(v1!=null)t1+=v1; if(v2!=null)t2+=v2;
       const diff=v1!=null&&v2!=null?v1-v2:null;
-      const status=v1==null||v2==null?'Missing':Math.abs(diff)<=tol?'Match':'Break';
-      row.push(v1??'', v2??'', diff!=null?diff.toFixed(2):'', status);
+      const st=v1==null||v2==null?'Missing':Math.abs(diff)<=tol?'Match':'Break';
+      row.push(v1??'',v2??'',diff!=null?diff.toFixed(2):'',st);
     });
-    const totDiff=tot1-tot2;
-    row.push(tot1.toFixed(2), tot2.toFixed(2), totDiff.toFixed(2), Math.abs(totDiff)<=tol?'Match':'Break');
+    const td=t1-t2;
+    row.push(t1.toFixed(2),t2.toFixed(2),td.toFixed(2),Math.abs(td)<=tol?'Match':'Break');
     rows.push(row);
   });
-
-  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  a.download = 'recon_pivot_'+new Date().toISOString().slice(0,10)+'.csv';
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='recon_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
-// ═══ RESET ═══
+// ═══════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════
 function resetAll() {
-  D={1:[],2:[]}; WB={1:null,2:null}; pivotData=null; currentView='all';
-  document.getElementById('s1btn').disabled = true;
-  [1,2].forEach(n => {
+  D={1:[],2:[]}; WB={1:null,2:null}; pivotResult=null; colPairs=[];
+  pairC=0; currentView='all'; openDrill=null;
+  document.getElementById('s1btn').disabled=true;
+  document.getElementById('pairList').innerHTML='';
+  [1,2].forEach(n=>{
     document.getElementById('zone'+n).classList.remove('loaded');
-    document.getElementById('z'+n+'t').textContent = 'Click or drag file here';
-    document.getElementById('sheetpicker'+n).style.display = 'none';
-    document.getElementById('stabs'+n).innerHTML = '';
-    document.getElementById('sinfo'+n).textContent = '';
+    document.getElementById('z'+n+'t').textContent='Click or drag file here';
+    document.getElementById('sheetpicker'+n).style.display='none';
+    document.getElementById('stabs'+n).innerHTML='';
+    document.getElementById('sinfo'+n).textContent='';
   });
 }
 </script>

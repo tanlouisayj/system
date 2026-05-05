@@ -208,8 +208,47 @@ input:focus, select:focus { outline: none; border-color: #555; }
 ```
 <!-- Mode A: manual column pairs -->
 <div id="colmode_pairs">
+
+  <!-- Per-file source type -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f0f0f0">
+    <div>
+      <label style="font-size:12px;font-weight:500;color:#555;display:block;margin-bottom:5px">File 1 — periods stored as</label>
+      <select id="f1src" style="font-size:12px;margin-bottom:5px" onchange="updatePairSource()">
+        <option value="header">Column headers &nbsp;(e.g. Jan-26 | Feb-26 as column names)</option>
+        <option value="values">Values in a column &nbsp;(a "Period" column with Jan-26, Feb-26...)</option>
+      </select>
+      <div id="f1long" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div>
+          <label style="font-size:11px;color:#888">Period column</label>
+          <select id="f1pcol" style="font-size:12px" onchange="updatePairSource()"></select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#888">Amount column</label>
+          <select id="f1vcol" style="font-size:12px"></select>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:500;color:#555;display:block;margin-bottom:5px">File 2 — periods stored as</label>
+      <select id="f2src" style="font-size:12px;margin-bottom:5px" onchange="updatePairSource()">
+        <option value="header">Column headers</option>
+        <option value="values">Values in a column</option>
+      </select>
+      <div id="f2long" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div>
+          <label style="font-size:11px;color:#888">Period column</label>
+          <select id="f2pcol" style="font-size:12px" onchange="updatePairSource()"></select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#888">Amount column</label>
+          <select id="f2vcol" style="font-size:12px"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-    <p style="font-size:12px;color:#666">Map each column in File 1 to its equivalent in File 2. Auto-suggest detects date formats.</p>
+    <p style="font-size:12px;color:#666">Map each period in File 1 to its equivalent in File 2.</p>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" onclick="autoSuggestPairs()">⚡ Auto-suggest</button>
       <button class="btn btn-sm" onclick="addPairRow()">+ Add pair</button>
@@ -541,17 +580,23 @@ function addPairRow(f1col, f2col, label, score) {
   const confCls = score >= 90 ? 'conf-high' : score >= 50 ? 'conf-med' : 'conf-low';
   const confTxt = score >= 90 ? '✓ Date match' : score >= 50 ? '~ Partial' : '? Manual';
   const lbl = label || (f1col || '');
+  const f1opts = getPairColOpts(1);
+  const f2opts = getPairColOpts(2);
   const tr = document.createElement('tr');
   tr.id = id;
   tr.innerHTML = `
-    <td><select class="pf1" onchange="updatePairLabel('${id}')">${selOpts(1, f1col)}</select></td>
+    <td><select class="pf1" onchange="updatePairLabel('${id}')">${f1opts}</select></td>
     <td style="text-align:center">
       ${score !== undefined ? `<span class="conf-badge ${confCls}">${confTxt}</span>` : '<span style="color:#ccc;font-size:16px">↔</span>'}
     </td>
-    <td><select class="pf2" onchange="updatePairLabel('${id}')">${selOpts(2, f2col)}</select></td>
+    <td><select class="pf2" onchange="updatePairLabel('${id}')">${f2opts}</select></td>
     <td><input type="text" class="plbl" value="${lbl}" placeholder="auto"></td>
     <td><button class="rm-btn" onclick="removePair('${id}')">×</button></td>`;
   document.getElementById('pairList').appendChild(tr);
+  // Set selected values after adding to DOM
+  const newTr = document.getElementById(id);
+  if (f1col) { const s=newTr.querySelector('.pf1'); if([...s.options].some(o=>o.value===f1col||o.text===f1col)) s.value=f1col; }
+  if (f2col) { const s=newTr.querySelector('.pf2'); if([...s.options].some(o=>o.value===f2col||o.text===f2col)) s.value=f2col; }
   updatePairMsg();
 }
 
@@ -633,52 +678,63 @@ function getActivePairs() {
 }
 
 function autoSuggestPairs() {
-  // Find date-like columns in each file and match them
+  const src1 = document.getElementById('f1src').value;
+  const src2 = document.getElementById('f2src').value;
   const c1 = cols(1), c2 = cols(2);
-  const dateCols1 = c1.map(c => ({col:c, pd: parseDate(c)})).filter(x => x.pd);
-  const dateCols2 = c2.map(c => ({col:c, pd: parseDate(c)})).filter(x => x.pd);
-
-  // Clear existing pairs
   document.getElementById('pairList').innerHTML = '';
   pairC = 0;
 
-  if (dateCols1.length === 0 && dateCols2.length === 0) {
-    // No date-like columns found — let user pick manually
-    addPairRow(c1[0], c2[0], '', 0);
-    document.getElementById('pairMsg').textContent =
-      'No date-format columns detected. Please select column pairs manually.';
+  // Collect date-keyed items from each file
+  // Wide (header): date is the column name
+  // Long (values): date is a unique value from the period column
+  function getDateItems(n, src) {
+    const cx = cols(n);
+    if (src === 'header') {
+      return cx.map(c => ({key:c, pd:parseDate(c)})).filter(x=>x.pd);
+    }
+    const pcol = document.getElementById('f'+n+'pcol').value;
+    if (!pcol) return [];
+    const seen = new Map();
+    D[n].forEach(r => {
+      const v = String(r[pcol]||'').trim();
+      if (!v || seen.has(v)) return;
+      const pd = parseDate(v);
+      if (pd) seen.set(v, pd);
+    });
+    return [...seen.entries()].map(([key,pd])=>({key,pd}));
+  }
+
+  const items1 = getDateItems(1, src1);
+  const items2 = getDateItems(2, src2);
+
+  if (items1.length === 0) {
+    addPairRow('', '', '', 0);
+    document.getElementById('pairMsg').textContent = 'No date values detected in File 1. Please add pairs manually.';
     return;
   }
 
-  // Match date columns from F1 to F2 by period
   const used2 = new Set();
   const pairs = [];
-
-  dateCols1.forEach(x1 => {
-    // Find matching period in F2
+  items1.forEach(x1 => {
     let best = null, bestScore = -1;
-    dateCols2.forEach(x2 => {
-      if (used2.has(x2.col)) return;
-      if (x2.pd.m === x1.pd.m && x2.pd.y === x1.pd.y) {
-        if (100 > bestScore) { bestScore = 100; best = x2; }
-      }
+    items2.forEach(x2 => {
+      if (used2.has(x2.key)) return;
+      if (x2.pd.m===x1.pd.m && x2.pd.y===x1.pd.y && 100 > bestScore) { bestScore=100; best=x2; }
     });
     if (best) {
-      used2.add(best.col);
-      pairs.push({f1: x1.col, f2: best.col, label: dateToLabel(x1.pd), score: 100, sortKey: dateSortKey(x1.pd)});
+      used2.add(best.key);
+      pairs.push({f1:x1.key, f2:best.key, label:dateToLabel(x1.pd), score:100, sortKey:dateSortKey(x1.pd)});
     } else {
-      // No match found — still add as unmatched for user to fix
-      pairs.push({f1: x1.col, f2: dateCols2[0]?.col || c2[0], label: dateToLabel(x1.pd), score: 0, sortKey: dateSortKey(x1.pd)});
+      pairs.push({f1:x1.key, f2:items2[0]?.key||'', label:dateToLabel(x1.pd), score:0, sortKey:dateSortKey(x1.pd)});
     }
   });
 
-  // Sort chronologically
-  pairs.sort((a,b) => a.sortKey - b.sortKey);
-  pairs.forEach(p => addPairRow(p.f1, p.f2, p.label, p.score));
-
-  const matched = pairs.filter(p => p.score === 100).length;
+  pairs.sort((a,b)=>a.sortKey-b.sortKey);
+  pairs.forEach(p=>addPairRow(p.f1, p.f2, p.label, p.score));
+  const matched = pairs.filter(p=>p.score===100).length;
   document.getElementById('pairMsg').textContent =
-    `${matched} of ${pairs.length} pairs matched by date. Review and adjust any marked with ~ or ?.`;
+    `${matched} of ${pairs.length} pairs matched by date. ` +
+    (matched < pairs.length ? 'Review pairs marked with ~  or ?.' : 'All matched ✓');
 }
 
 // ═══════════════════════════════════════════
@@ -700,6 +756,72 @@ function setColMode(mode) {
     const wrap = document.getElementById('amtcol'+n+'_wrap');
     if (wrap) wrap.style.display = mode === 'field' ? '' : 'none';
   });
+}
+
+function updatePairSource() {
+  [1,2].forEach(n => {
+    const src = document.getElementById('f'+n+'src').value;
+    const isLong = src === 'values';
+    const longDiv = document.getElementById('f'+n+'long');
+    longDiv.style.display = isLong ? 'grid' : 'none';
+    // Populate period/amount cols for long format
+    if (isLong) {
+      const cx = cols(n);
+      const opts = '<option value="">-- select --</option>' + cx.map(c=>`<option>${c}</option>`).join('');
+      document.getElementById('f'+n+'pcol').innerHTML = opts;
+      document.getElementById('f'+n+'vcol').innerHTML = opts;
+      // Auto-guess
+      const pg = cx.find(c => /period|month|mth|yyyymm|mmyyyy/i.test(c));
+      const ag = cx.find(c => /amount|amt|value|balance|lcy|fcy|bal/i.test(c));
+      if (pg) document.getElementById('f'+n+'pcol').value = pg;
+      if (ag) document.getElementById('f'+n+'vcol').value = ag;
+    }
+    // Refresh F1/F2 col options in existing pair rows
+    refreshPairOpts(n);
+  });
+}
+
+function getPairColOpts(n) {
+  // Returns option HTML for the pair table dropdown for file n
+  // Wide: column headers; Long: unique values from the period column
+  const src = document.getElementById('f'+n+'src').value;
+  if (src === 'header') {
+    return cols(n).map(c => `<option>${c}</option>`).join('');
+  }
+  // Long: unique values from the period column
+  const pcol = document.getElementById('f'+n+'pcol').value;
+  if (!pcol) return '<option value="">-- pick period column first --</option>';
+  const seen = new Set();
+  D[n].forEach(r => { const v=String(r[pcol]||'').trim(); if(v) seen.add(v); });
+  const sorted = [...seen].sort((a,b) => {
+    const da=parseDate(a), db=parseDate(b);
+    if(da&&db) return (da.y*12+da.m)-(db.y*12+db.m);
+    return a.localeCompare(b,undefined,{numeric:true});
+  });
+  return sorted.map(v=>`<option>${v}</option>`).join('');
+}
+
+function refreshPairOpts(n) {
+  const cls = n===1 ? '.pf1' : '.pf2';
+  const opts = getPairColOpts(n);
+  document.querySelectorAll('#pairList tr').forEach(tr => {
+    const sel = tr.querySelector(cls);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = opts;
+    if ([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  });
+}
+
+function getPairSrcInfo() {
+  return {
+    f1src: document.getElementById('f1src').value,
+    f2src: document.getElementById('f2src').value,
+    f1pcol: document.getElementById('f1pcol')?.value || null,
+    f1vcol: document.getElementById('f1vcol')?.value || null,
+    f2pcol: document.getElementById('f2pcol')?.value || null,
+    f2vcol: document.getElementById('f2vcol')?.value || null,
+  };
 }
 
 function previewColField() {
@@ -955,6 +1077,7 @@ function buildPivotFromPairs(data, rowCol, rowNorm, pairs, aggType, filters) {
 //  RUN RECON
 // ═══════════════════════════════════════════
 function runRecon() {
+  const colMode = document.querySelector('input[name="colmode"]:checked').value;
   const pairs = getActivePairs();
   if (pairs.length === 0) { alert('Please configure at least one column pair or column field.'); return; }
 
@@ -966,22 +1089,35 @@ function runRecon() {
   const tol     = parseFloat(document.getElementById('tol').value) || 0.01;
   const lbl1    = document.getElementById('lbl1').value || 'File 1';
   const lbl2    = document.getElementById('lbl2').value || 'File 2';
-  const colMode = document.querySelector('input[name="colmode"]:checked').value;
-  // Amount col: required for field mode, optional for pairs mode (paired col IS the value)
-  const amt1    = colMode === 'field' ? document.getElementById('amt1').value : null;
-  const amt2    = colMode === 'field' ? document.getElementById('amt2').value : null;
-  if (colMode === 'field' && (!amt1 || !amt2)) { alert('Please select an Amount column for each file.'); return; }
-  const vfcol1 = document.getElementById('vfcol1').value;
-  const vfval1 = document.getElementById('vfval1').value;
-  const vfcol2 = document.getElementById('vfcol2').value;
-  const vfval2 = document.getElementById('vfval2').value;
-  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, colMode, amt1, amt2, vfcol1, vfval1, vfcol2, vfval2};
+  const vfcol1  = document.getElementById('vfcol1').value;
+  const vfval1  = document.getElementById('vfval1').value;
+  const vfcol2  = document.getElementById('vfcol2').value;
+  const vfval2  = document.getElementById('vfval2').value;
+
+  // Per-file source config
+  const srcInfo = getPairSrcInfo();
+  // Validate long format fields
+  if (srcInfo.f1src==='values' && (!srcInfo.f1pcol||!srcInfo.f1vcol)) { alert('File 1: select Period column and Amount column.'); return; }
+  if (srcInfo.f2src==='values' && (!srcInfo.f2pcol||!srcInfo.f2vcol)) { alert('File 2: select Period column and Amount column.'); return; }
+
+  // For field mode (radio), also get amt cols
+  const amt1 = colMode==='field' ? document.getElementById('amt1').value : srcInfo.f1vcol;
+  const amt2 = colMode==='field' ? document.getElementById('amt2').value : srcInfo.f2vcol;
+
+  meta = {rowCol1, rowCol2, rowNorm, agg1, agg2, tol, lbl1, lbl2, pairs, colMode, srcInfo, amt1, amt2, vfcol1, vfval1, vfcol2, vfval2};
   const fd1 = applyFs(D[1], getFs(1));
   const fd2 = applyFs(D[2], getFs(2));
 
   // Build separately per side using the correct column names
-  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label, normVal:p.normVal, raw:p.f1raw})), agg1, colMode, null, amt1, vfcol1, vfval1);
-  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label, normVal:p.normVal, raw:p.f2raw})), agg2, colMode, null, amt2, vfcol2, vfval2);
+  // Determine per-file source type (pairs mode uses f1src/f2src; field mode always long)
+  const f1src = colMode==='field' ? 'values' : srcInfo.f1src;
+  const f2src = colMode==='field' ? 'values' : srcInfo.f2src;
+  const f1pcol = colMode==='field' ? document.getElementById('colfield1').value : srcInfo.f1pcol;
+  const f2pcol = colMode==='field' ? document.getElementById('colfield2').value : srcInfo.f2pcol;
+  const colNorm = document.getElementById('colnorm')?.value || 'date';
+
+  const p1 = buildPivotSide(fd1, rowCol1, rowNorm, pairs.map(p=>({col:p.f1col, label:p.label, normVal:p.normVal})), agg1, f1src, f1pcol, amt1, vfcol1, vfval1, colNorm);
+  const p2 = buildPivotSide(fd2, rowCol2, rowNorm, pairs.map(p=>({col:p.f2col, label:p.label, normVal:p.normVal})), agg2, f2src, f2pcol, amt2, vfcol2, vfval2, colNorm);
 
   const allRows = [...new Set([...p1.rowKeys, ...p2.rowKeys])]
     .sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
@@ -997,10 +1133,11 @@ function runRecon() {
   goS(3);
 }
 
-function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, colMode, _unused, valueCol, vfCol, vfVal) {
-  // colMode = 'pairs' (each period is a column header) or 'field' (periods are row values)
-  // pairs mode: col = column header name, value = cell in that column
-  // field mode: col = the field column name, normVal = period to match, valueCol = amount column
+function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, srcType, periodCol, valueCol, vfCol, vfVal, colNorm) {
+  // srcType = 'header' (wide: period is a column name) or 'values' (long: period is a row value)
+  // header mode: colMap.col = column header (e.g. "Jan-26"), rawVal = row[col]
+  // values mode: colMap.col = period value to match (e.g. "202601"), periodCol = which column
+  //              holds that value, valueCol = which column holds the amount
   const cells = {}, counts = {}, src = {};
   const rowKeys = new Set();
 
@@ -1009,19 +1146,29 @@ function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, colMode, _unuse
     ? data.filter(r => String(r[vfCol]||'').trim() === vfVal.trim())
     : data;
 
-  if (colMode === 'field') {
-    // Field mode: match row[col] (normalised) against each pair's normVal
-    const norm = document.getElementById('colnorm').value;
+  if (srcType === 'values') {
+    // Long format: period values in periodCol, amounts in valueCol
+    // Build a lookup: normalisedPeriodValue → pair label
+    const norm = colNorm || 'date';
+    const periodToLabel = {};
+    colMaps.forEach(({col, label, normVal}) => {
+      // normVal may be pre-computed, or derive from col
+      const nv = normVal || normPeriod(col, norm) || col.toLowerCase();
+      periodToLabel[nv] = label;
+    });
+
     fd.forEach(row => {
       const rk = normaliseKey(row[rowCol], rowNorm);
       if (!rk) return;
-      const rawPeriod = row[colMaps[0]?.col];  // field column name (same for all pairs)
+      if (!periodCol) return;
+      const rawPeriod = row[periodCol];
       if (rawPeriod == null || rawPeriod === '') return;
-      const normPeriodVal = normPeriod(String(rawPeriod), norm);
-      const matchPair = colMaps.find(p => p.normVal === normPeriodVal);
-      if (!matchPair) return;
-      const v = valueCol ? toNum(row[valueCol]) : 1;
-      const lbl = matchPair.label;
+      const nv = normPeriod(String(rawPeriod), norm) || String(rawPeriod).trim().toLowerCase();
+      const lbl = periodToLabel[nv];
+      if (!lbl) return;
+      const rawAmt = valueCol ? row[valueCol] : null;
+      if (valueCol && (rawAmt == null || rawAmt === '')) return;
+      const v = valueCol ? toNum(rawAmt) : 1;
       rowKeys.add(rk);
       if (!cells[rk]) { cells[rk]={}; counts[rk]={}; src[rk]={}; }
       if (!src[rk][lbl]) src[rk][lbl]=[];
@@ -1029,7 +1176,7 @@ function buildPivotSide(data, rowCol, rowNorm, colMaps, aggType, colMode, _unuse
       aggInto(cells[rk], counts[rk], lbl, v, aggType);
     });
   } else {
-    // Pairs mode: col is a column header, cell value is the amount
+    // Wide / header format: column name IS the period, cell value is the amount
     fd.forEach(row => {
       const rk = normaliseKey(row[rowCol], rowNorm);
       if (!rk) return;

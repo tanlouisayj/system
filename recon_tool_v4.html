@@ -1095,10 +1095,11 @@ function renderPivot(){
   var sRows=allRows.filter(function(rk){return selRows.has(rk);});
   var aPairs=pairs.filter(function(p){return selCols.has(p.label);});
 
+  // Column slicer (aPairs) controls which columns DISPLAY.
+  // Row view filters (breaks/missing) evaluate ALL configured pairs so that
+  // e.g. filtering to Jan+Feb columns still shows rows that break in Mar.
   var showRows=curView==='breaks'
-    ?sRows.filter(function(rk){return aPairs.some(function(p){
-        // Treat null as 0 — matches the cell-rendering logic so breaks-only
-        // filter catches one-sided rows (null vs 15772) as well as two-sided breaks.
+    ?sRows.filter(function(rk){return pairs.some(function(p){
         var rv1=p1.cells[rk]!=null?p1.cells[rk][p.label]:null;
         var rv2=p2.cells[rk]!=null?p2.cells[rk][p.label]:null;
         if(rv1==null&&rv2==null) return false;
@@ -1106,7 +1107,7 @@ function renderPivot(){
         return Math.abs(eff1-eff2)>tol;
       });})
     :curView==='missing'
-    ?sRows.filter(function(rk){return aPairs.some(function(p){
+    ?sRows.filter(function(rk){return pairs.some(function(p){
         return (p1.cells[rk]==null||p1.cells[rk][p.label]==null)||(p2.cells[rk]==null||p2.cells[rk][p.label]==null);
       });})
     :sRows;

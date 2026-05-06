@@ -436,18 +436,33 @@ var SNAME={1:'File 1',2:'File 2'};
 
 function loadSheet(n,name,fileName) {
   var ws=WB[n].Sheets[name];
-  var raw=XLSX.utils.sheet_to_json(ws,{defval:''});
 
-  // FIX: Excel error cells (#N/A, #REF!, #DIV/0!, etc.) arrive as numeric error
-  // codes when raw:true (the default). We do a second pass over the worksheet to
-  // find cells with type 'e' and replace the code with the readable error text so
-  // they appear correctly in filter dropdowns instead of as mystery numbers.
-  var ERR={0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A'};
+  // Find the first non-empty row to use as headers — handles files with title rows,
+  // blank rows, or report headings above the actual data table.
+  var hdrRow=0;
   var ref=ws['!ref'];
+  if(ref){
+    var range=XLSX.utils.decode_range(ref);
+    hdrRow=range.s.r; // default: first row in used range
+    outer: for(var R=range.s.r;R<=range.e.r;R++){
+      for(var C=range.s.c;C<=range.e.c;C++){
+        var cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+        if(cell&&cell.t!=='z'&&cell.v!==undefined&&String(cell.v).trim()!==''){
+          hdrRow=R; break outer;
+        }
+      }
+    }
+  }
+
+  // Parse from the detected header row onwards.
+  var raw=XLSX.utils.sheet_to_json(ws,{defval:'',range:hdrRow});
+
+  // Fix Excel error cells (#N/A, #REF!, #DIV/0!, etc.) — they arrive as numeric
+  // error codes; replace with the human-readable text so they appear in dropdowns.
+  var ERR={0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A'};
   if(ref&&raw.length){
     var range=XLSX.utils.decode_range(ref);
-    var hdrRow=range.s.r;
-    // Build column-index → header-name map from the header row
+    // Build column-index → header-name map from the detected header row
     var colNames={};
     for(var C=range.s.c;C<=range.e.c;C++){
       var hc=ws[XLSX.utils.encode_cell({r:hdrRow,c:C})];
@@ -459,7 +474,6 @@ function loadSheet(n,name,fileName) {
         var cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
         if(cell&&cell.t==='e'){
           var cname=colNames[C]; if(!cname) continue;
-          // cell.w is the formatted text Excel shows; fall back to our lookup table
           raw[ri][cname]=cell.w||ERR[cell.v]||'#ERR';
         }
       }
@@ -473,7 +487,7 @@ function loadSheet(n,name,fileName) {
   SNAME[n]=name;
   var nc=Object.keys(data[0]||{}).length;
   document.getElementById('z'+n+'t').textContent=(fileName?fileName+' — ':'')+name;
-  document.getElementById('si'+n).textContent='✓ "'+name+'" — '+data.length+' rows, '+nc+' columns';
+  document.getElementById('si'+n).textContent='✓ "'+name+'" — '+data.length+' rows, '+nc+' columns'+(hdrRow>0?' (headers detected on row '+(hdrRow+1)+')':'');
   updateSheetLabels(n,name);
   checkReady();
 }

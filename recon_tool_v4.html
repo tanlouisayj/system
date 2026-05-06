@@ -1073,9 +1073,13 @@ function renderPivot(){
 
   var showRows=curView==='breaks'
     ?sRows.filter(function(rk){return aPairs.some(function(p){
-        var v1=p1.cells[rk]!=null?p1.cells[rk][p.label]:undefined;
-        var v2=p2.cells[rk]!=null?p2.cells[rk][p.label]:undefined;
-        return v1!=null&&v2!=null&&Math.abs(v1-v2)>tol;
+        // Treat null as 0 — matches the cell-rendering logic so breaks-only
+        // filter catches one-sided rows (null vs 15772) as well as two-sided breaks.
+        var rv1=p1.cells[rk]!=null?p1.cells[rk][p.label]:null;
+        var rv2=p2.cells[rk]!=null?p2.cells[rk][p.label]:null;
+        if(rv1==null&&rv2==null) return false;
+        var eff1=rv1!=null?rv1:0, eff2=rv2!=null?rv2:0;
+        return Math.abs(eff1-eff2)>tol;
       });})
     :curView==='missing'
     ?sRows.filter(function(rk){return aPairs.some(function(p){

@@ -46,11 +46,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 .dim-row{display:grid;grid-template-columns:1fr 26px 1fr 110px;gap:7px;align-items:end}
 .dim-arrow{text-align:center;font-size:16px;color:#ccc;padding-bottom:8px}
 .fr-row{display:grid;grid-template-columns:1fr 20px 1fr 26px;gap:5px;align-items:start;margin-bottom:8px}
-.rfval-list{border:1px solid #ddd;border-radius:5px;max-height:110px;overflow-y:auto;background:#fff;min-width:100%}
-.rfval-list label{display:flex;align-items:center;gap:6px;padding:3px 8px;font-size:11px;cursor:pointer;border-bottom:1px solid #f5f5f5;white-space:nowrap}
-.rfval-list label:last-child{border-bottom:none}
-.rfval-list label:hover{background:#f5f5f5}
-.rfval-search{width:100%;padding:3px 7px;border:none;border-bottom:1px solid #e0e0e0;font-size:11px;font-family:inherit;outline:none}
+.rfval-multi{width:100%;border:1px solid #ddd;border-radius:5px;font-size:11px;font-family:inherit;background:#fff;min-height:36px;max-height:110px}
 .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
 .stat{background:#f8f8f8;border-radius:8px;padding:.9rem;text-align:center}
 .stat-n{font-size:20px;font-weight:600}.stat-l{font-size:11px;color:#888;margin-top:2px}
@@ -762,7 +758,18 @@ function updateRFVals(sel,n) {
   var vals=[]; D[n].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
   vals.sort();
   var vs=sel.parentNode.querySelector('.rfval');
-  vs.innerHTML='<option value="">— val —</option>'+vals.map(function(v){return '<option>'+v+'</option>';}).join('');
+  // Size clamps between 3 and 6 rows visible
+  vs.size=Math.min(6,Math.max(3,vals.length));
+  vs.innerHTML=vals.map(function(v){return '<option value="'+v.replace(/"/g,'&quot;')+'">'+v+'</option>';}).join('');
+  // Warn if this column is also the configured period column (use column slicer instead)
+  var periodCol=document.getElementById('f'+n+'dimcol')?document.getElementById('f'+n+'dimcol').value:'';
+  var warn=sel.parentNode.querySelector('.rf-period-warn');
+  if(periodCol&&col===periodCol) {
+    if(!warn){var w=document.createElement('p');w.className='rf-period-warn';
+      w.style.cssText='font-size:10px;color:#b7770d;margin-top:3px;grid-column:3';
+      w.textContent='⚠ This is the period column — use the column slicer on the results page to filter periods instead.';
+      sel.closest('.fr-row').appendChild(w);}
+  } else { if(warn) warn.remove(); }
 }
 
 function getRowFilters(n) {
@@ -770,7 +777,8 @@ function getRowFilters(n) {
   var result=[];
   list.querySelectorAll('.fr-row').forEach(function(row){
     var col=row.querySelector('.rfcol').value; if(!col) return;
-    var vals=Array.from(row.querySelectorAll('.rfval-list input:checked')).map(function(cb){return cb.value;});
+    var sel=row.querySelector('.rfval');
+    var vals=sel?Array.from(sel.selectedOptions).map(function(o){return o.value;}).filter(Boolean):[];
     if(vals.length) result.push({col:col,vals:vals});
   });
   return result;

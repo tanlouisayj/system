@@ -68,6 +68,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 .pivot-table tr:hover td{background:#fafafa}.pivot-table tr:hover td.row-key{background:#fafafa}
 .cell-match{color:#2d7a4f}.cell-break{color:#c0392b;font-weight:600;background:#fff5f5!important;cursor:pointer}
 .cell-miss{color:#b7770d;background:#fffbf0!important}.cell-zero{color:#aaa}
+.cell-dimmed{color:#ddd!important;background:#fafafa!important;font-weight:400!important}
 .col-total{background:#f0f4f8!important;font-weight:600;border-left:2px solid #ccc!important}
 .col-total.cell-break{background:#fdecea!important}
 .grand-row td{background:#e8edf2!important;font-weight:700;border-top:2px solid #aaa!important}
@@ -150,8 +151,6 @@ select:focus,input:focus{outline:none;border-color:#555}
 
 <div id="step2" class="step">
 
-  <!-- ROWS -->
-
   <div class="card">
     <span class="slbl">Rows — what appears as row labels (e.g. LCIN, Cost Centre)</span>
     <div class="dim-row">
@@ -169,73 +168,61 @@ select:focus,input:focus{outline:none;border-color:#555}
     </div>
   </div>
 
-  <!-- COLUMNS -->
-
   <div class="card">
     <span class="slbl">Columns — what spreads across as column headers</span>
     <p style="font-size:12px;color:#666;margin-bottom:12px">
       Pick which column in each file determines the column headers (e.g. the Period column, or the month columns).
       The tool reads all unique values and lets you map them to each other.
     </p>
-
-```
-<!-- Column field selectors -->
-<div class="grid2" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
-  <div>
-    <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-1">File 1</span> — column field</label>
-    <select id="f1dimcol" onchange="onDimColChange()"></select>
-    <p id="f1dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
-  </div>
-  <div>
-    <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-2">File 2</span> — column field</label>
-    <select id="f2dimcol" onchange="onDimColChange()"></select>
-    <p id="f2dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
-  </div>
-</div>
-
-<!-- Pair mapping table -->
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <p style="font-size:12px;color:#666">Map each value in <span class="sname-1">File 1</span> to the matching value in <span class="sname-2">File 2</span>.</p>
-    <div style="display:flex;align-items:center;gap:5px">
-      <label style="font-size:11px;color:#666;margin:0;white-space:nowrap">Match as</label>
-      <select id="colnorm" style="width:auto;font-size:11px" onchange="autoSuggest()">
-        <option value="date">Date (Jan-26)</option>
-        <option value="text">Text (exact)</option>
-        <option value="num">Number</option>
-      </select>
+    <div class="grid2" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
+      <div>
+        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-1">File 1</span> — column field</label>
+        <select id="f1dimcol" onchange="onDimColChange()"></select>
+        <p id="f1dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
+      </div>
+      <div>
+        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-2">File 2</span> — column field</label>
+        <select id="f2dimcol" onchange="onDimColChange()"></select>
+        <p id="f2dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <p style="font-size:12px;color:#666">Map each value in <span class="sname-1">File 1</span> to the matching value in <span class="sname-2">File 2</span>.</p>
+        <div style="display:flex;align-items:center;gap:5px">
+          <label style="font-size:11px;color:#666;margin:0;white-space:nowrap">Match as</label>
+          <select id="colnorm" style="width:auto;font-size:11px" onchange="autoSuggest()">
+            <option value="date">Date (Jan-26)</option>
+            <option value="text">Text (exact)</option>
+            <option value="num">Number</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="previewPairs()">🔍 Preview</button>
+        <button class="btn btn-sm" onclick="autoSuggest()">⚡ Auto-suggest</button>
+        <button class="btn btn-sm" onclick="addPair()">+ Add pair</button>
+      </div>
+    </div>
+    <table class="pair-table">
+      <thead><tr>
+        <th style="width:35%" id="pairHdr1"><span class="sname-1">File 1</span> value</th>
+        <th style="width:7%;text-align:center">↔</th>
+        <th style="width:35%" id="pairHdr2"><span class="sname-2">File 2</span> value</th>
+        <th style="width:15%">Label in output</th>
+        <th style="width:8%"></th>
+      </tr></thead>
+      <tbody id="pairList"></tbody>
+    </table>
+    <p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
+    <div id="pairPrev" class="prev-box" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
+        <button class="rm-btn" onclick="document.getElementById('pairPrev').style.display='none'">×</button>
+      </div>
+      <div id="pairPrevContent"></div>
     </div>
   </div>
-  <div style="display:flex;gap:6px">
-    <button class="btn btn-sm" onclick="previewPairs()">🔍 Preview</button>
-    <button class="btn btn-sm" onclick="autoSuggest()">⚡ Auto-suggest</button>
-    <button class="btn btn-sm" onclick="addPair()">+ Add pair</button>
-  </div>
-</div>
-
-<table class="pair-table">
-  <thead><tr>
-    <th style="width:35%" id="pairHdr1"><span class="sname-1">File 1</span> value</th>
-    <th style="width:7%;text-align:center">↔</th>
-    <th style="width:35%" id="pairHdr2"><span class="sname-2">File 2</span> value</th>
-    <th style="width:15%">Label in output</th>
-    <th style="width:8%"></th>
-  </tr></thead>
-  <tbody id="pairList"></tbody>
-</table>
-<p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
-<div id="pairPrev" class="prev-box" style="display:none">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-    <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
-    <button class="rm-btn" onclick="document.getElementById('pairPrev').style.display='none'">×</button>
-  </div>
-  <div id="pairPrevContent"></div>
-</div>
-```
-
-  </div>
-
-  <!-- VALUE MAPPING -->
 
   <div class="card" id="vmapCard">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
@@ -247,8 +234,6 @@ select:focus,input:focus{outline:none;border-color:#555}
     </div>
     <div id="vmapList"></div>
   </div>
-
-  <!-- VALUES -->
 
   <div class="grid2">
     <div class="card">
@@ -294,8 +279,6 @@ select:focus,input:focus{outline:none;border-color:#555}
       </div>
     </div>
   </div>
-
-  <!-- TOLERANCE + FILTERS -->
 
   <div class="card">
     <div class="grid3">
@@ -361,7 +344,7 @@ select:focus,input:focus{outline:none;border-color:#555}
     </div>
   </div>
   <div class="pivot-wrap"><table class="pivot-table" id="pivotTable"></table></div>
-  <p style="font-size:11px;color:#888;margin-top:6px">Click any row label or red cell to expand source rows.</p>
+  <p style="font-size:11px;color:#888;margin-top:6px">Click any row label or red cell to expand source rows. In "Breaks only" view, dimmed cells are matched — only red cells are breaks.</p>
   <div class="actions">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" onclick="goStep(2)">← Edit config</button>
@@ -375,12 +358,9 @@ select:focus,input:focus{outline:none;border-color:#555}
 <div class="footer">All data stays in your browser — nothing is uploaded or shared.</div>
 
 <script>
-// ── STATE ──
-// FIX: vfC is now declared globally so it is always available before initConfig() runs.
 var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, vfC={1:0,2:0}, pC=0, vmapC=0;
 var curView='all', openDrill=null, selRows=new Set(), selCols=new Set();
 
-// ── DATE PARSING ──
 var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
   january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
 var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -392,7 +372,6 @@ function parseDt(s) {
     var y=num.length<=2 ? 2000+parseInt(num) : parseInt(num.slice(-4));
     return {m:MONTHS[alpha],y:y};
   }
-  // Excel date serial numbers (~40000-55000 = years 2009-2036)
   var ni=parseInt(n);
   if (/^\d{5}$/.test(n) && ni>=40000 && ni<=55000) {
     var ds=new Date((ni-25569)*86400*1000);
@@ -415,7 +394,6 @@ function normPd(val,norm) {
   return s;
 }
 
-// ── FILE LOADING ──
 function evDrag(e,id){e.preventDefault();document.getElementById(id).classList.add('drag');}
 function evLeave(id){document.getElementById(id).classList.remove('drag');}
 function evDrop(e,n){e.preventDefault();evLeave('zone'+n);var f=e.dataTransfer.files[0];if(f)parseFile(n,f);}
@@ -457,8 +435,37 @@ function pickSheet(n,name,btn) {
 var SNAME={1:'File 1',2:'File 2'};
 
 function loadSheet(n,name,fileName) {
-  var raw=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
-  // Trim all column header keys — Excel sometimes adds invisible spaces or BOM chars
+  var ws=WB[n].Sheets[name];
+  var raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+
+  // FIX: Excel error cells (#N/A, #REF!, #DIV/0!, etc.) arrive as numeric error
+  // codes when raw:true (the default). We do a second pass over the worksheet to
+  // find cells with type 'e' and replace the code with the readable error text so
+  // they appear correctly in filter dropdowns instead of as mystery numbers.
+  var ERR={0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A'};
+  var ref=ws['!ref'];
+  if(ref&&raw.length){
+    var range=XLSX.utils.decode_range(ref);
+    var hdrRow=range.s.r;
+    // Build column-index → header-name map from the header row
+    var colNames={};
+    for(var C=range.s.c;C<=range.e.c;C++){
+      var hc=ws[XLSX.utils.encode_cell({r:hdrRow,c:C})];
+      if(hc) colNames[C]=String(hc.v||'').trim();
+    }
+    for(var R=hdrRow+1;R<=range.e.r;R++){
+      var ri=R-hdrRow-1; if(!raw[ri]) continue;
+      for(var C=range.s.c;C<=range.e.c;C++){
+        var cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+        if(cell&&cell.t==='e'){
+          var cname=colNames[C]; if(!cname) continue;
+          // cell.w is the formatted text Excel shows; fall back to our lookup table
+          raw[ri][cname]=cell.w||ERR[cell.v]||'#ERR';
+        }
+      }
+    }
+  }
+
   var data=raw.map(function(row){
     var nr={}; Object.keys(row).forEach(function(k){nr[k.trim()]=row[k];}); return nr;
   });
@@ -477,7 +484,6 @@ function updateSheetLabels(n,name) {
 
 function checkReady(){document.getElementById('s1btn').disabled=!(D[1].length&&D[2].length);}
 
-// ── NAVIGATION ──
 function goStep(n) {
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
   document.getElementById('step'+n).classList.add('active');
@@ -486,7 +492,6 @@ function goStep(n) {
   if (rb) rb.textContent=(n===2&&PR)?'Re-run':'Run reconciliation';
 }
 
-// ── CONFIG ──
 function getCols(n){return Object.keys(D[n][0]||{});}
 
 function fillSel(id,n,sel) {
@@ -495,18 +500,13 @@ function fillSel(id,n,sel) {
   }).join('');
 }
 
-// ── COLUMN DIMENSION ──
 function isDimWide(n, colName) {
   return parseDt(colName) !== null;
 }
 
-// Normalise a column field value to a clean number string if it looks numeric.
-// Handles Excel float bleed: 202601.0 → "202601", 3.0 → "3", 3.5 stays "3.5".
 function normColVal(v) {
   var s = String(v||'').trim();
-  // If it's a pure integer stored as a float (e.g. 202601.0), strip the decimals
   if (/^\d+\.0+$/.test(s)) return String(parseInt(s, 10));
-  // If it's any other number with trailing zeros after decimal (e.g. 3.50 → 3.5)
   var n = parseFloat(s);
   if (!isNaN(n) && String(n) !== s && /^\d+(\.\d+)?$/.test(s)) return String(n);
   return s;
@@ -519,7 +519,7 @@ function getDimVals(n, colName) {
   }
   var seen = {}, result = [];
   D[n].forEach(function(r) {
-    var v = normColVal(r[colName]); // ← normalise numeric bleed before dedup
+    var v = normColVal(r[colName]);
     if (v && !seen[v]) { seen[v]=1; result.push({key:v, pd:parseDt(v)}); }
   });
   result.sort(function(a,b) {
@@ -579,13 +579,11 @@ function initConfig() {
   var c1=getCols(1), c2=getCols(2);
   var blank='<option value="">— select —</option>';
 
-  // Row key
   var rg1=c1.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c1[0];
   var rg2=c2.find(function(c){return c.toLowerCase()===rg1.toLowerCase();})||
     c2.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c2[0];
   fillSel('row1',1,rg1); fillSel('row2',2,rg2);
 
-  // Amount cols
   document.getElementById('amt1').innerHTML=blank+c1.map(function(c){return '<option>'+c+'</option>';}).join('');
   document.getElementById('amt2').innerHTML=blank+c2.map(function(c){return '<option>'+c+'</option>';}).join('');
   var ag1=c1.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal|pnl/i.test(c);});
@@ -593,21 +591,17 @@ function initConfig() {
   if(ag1) document.getElementById('amt1').value=ag1;
   if(ag2) document.getElementById('amt2').value=ag2;
 
-  // Reset value filter counters and lists
   vfC={1:0,2:0};
   document.getElementById('vflist1').innerHTML='';
   document.getElementById('vflist2').innerHTML='';
 
-  // Pre-fill labels from sheet names
   if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
   if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
 
-  // Populate dimension column dropdowns
   [1,2].forEach(function(n){
     var cx=n===1?c1:c2;
     var opts='<option value="">— select column —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
     document.getElementById('f'+n+'dimcol').innerHTML=opts;
-    // Guess best column: prefer date-looking headers (wide), else period-named column (long)
     var dateCols=cx.filter(function(c){return parseDt(c)!==null;});
     var periodCol=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
     var guess=dateCols.length>0?dateCols[0]:(periodCol||cx[0]);
@@ -615,17 +609,14 @@ function initConfig() {
   });
   onDimColChange();
 
-  // Clear row filters and vmaps
   document.getElementById('flist1').innerHTML='';
   document.getElementById('flist2').innerHTML='';
   document.getElementById('vmapList').innerHTML='';
   fcC={1:0,2:0}; vmapC=0;
 
-  // Auto-suggest pairs if none exist
   if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
 }
 
-// ── PAIR TABLE ──
 function addPair(f1v,f2v,lbl,score) {
   var id='p'+(++pC);
   var ccls=score>=90?'conf-high':score>=50?'conf-med':'conf-low';
@@ -657,7 +648,7 @@ function getPairs() {
   var norm=document.getElementById('colnorm').value||'date';
   return Array.from(document.querySelectorAll('#pairList tr')).map(function(tr){
     var f1=tr.querySelector('.pf1').value, lbl=tr.querySelector('.plbl').value||f1;
-    var f1n=normColVal(f1); // normalise numeric bleed for matching
+    var f1n=normColVal(f1);
     return {f1col:f1, f2col:tr.querySelector('.pf2').value, label:lbl, normVal:normPd(f1n,norm)||f1n};
   });
 }
@@ -735,31 +726,30 @@ function previewPairs() {
 }
 
 // ── VALUE FILTERS ──
+// FIX 1: addVF now passes the side (n) explicitly to updateVFVals_inline
+// so the dropdown always reads from the correct file's data (D[1] vs D[2]).
 function addVF(n) {
   var id='vf'+n+'_'+(++vfC[n]);
   var cx=getCols(n);
   var opts='<option value="">— col —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
   var div=document.createElement('div'); div.className='fr-row'; div.id=id;
-  div.innerHTML='<select class="vfcol" onchange="updateVFVals_inline(this)">'+opts+'</select>'
+  // Pass n explicitly — previously this was updateVFVals_inline(this) with no side arg,
+  // causing the function to guess the wrong side via fragile DOM traversal.
+  div.innerHTML='<select class="vfcol" onchange="updateVFVals_inline(this,'+n+')">'+opts+'</select>'
     +'<span style="text-align:center;color:#ccc;font-size:13px;padding:0 2px">=</span>'
     +'<select class="vfval"><option value="">— val —</option></select>'
     +'<button class="rm-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
   document.getElementById('vflist'+n).appendChild(div);
 }
 
-function updateVFVals_inline(sel) {
-  var n=sel.closest('[id^="vflist"]')?1:1; // side determined from container
-  var container=sel.closest('.card');
-  var side=container&&container.querySelector('#vflist1')===sel.closest('[id^="vf"]').parentNode?1:2;
+// FIX 1 (cont): Accept side as a direct parameter instead of trying to infer it from DOM.
+function updateVFVals_inline(sel, side) {
   var col=sel.value; if(!col) return;
-  var vals=[]; D[side].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
+  var vals=[];
+  D[side].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
   vals.sort();
   var vs=sel.parentNode.querySelector('.vfval');
   vs.innerHTML='<option value="">— val —</option>'+vals.map(function(v){return '<option>'+v+'</option>';}).join('');
-}
-
-function updateVFVals(n) {
-  // Called from initConfig for auto-guessed filter column
 }
 
 function getVFs(n) {
@@ -780,7 +770,6 @@ function applyVFs(data, vfs) {
   });
 }
 
-// ── ROW FILTERS ──
 function addRowFilter(n) {
   var id='rf'+n+'_'+(++fcC[n]);
   var cx=getCols(n);
@@ -819,7 +808,6 @@ function applyFilters(data, filters) {
   });
 }
 
-// ── VALUE MAPPING ──
 function addVmap() {
   var id = 'vm_' + (++vmapC);
   var c1 = getCols(1), c2 = getCols(2);
@@ -914,7 +902,6 @@ function applyVmaps(data, vmaps, side) {
   });
 }
 
-// ── NORMALISE ──
 function normKey(val,type){
   var s=String(val||'').trim();
   if(type==='num') return String(parseFloat(s.replace(/,/g,''))||0);
@@ -924,7 +911,6 @@ function normKey(val,type){
 }
 function toNum(v){return parseFloat(String(v||'').replace(/,/g,''))||0;}
 
-// ── BUILD PIVOT SIDE ──
 function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,vfCol,vfVal,colNorm) {
   var cells={}, cnts={}, src={}, rowKeys=[];
   var fd=(vfCol&&vfVal)?data.filter(function(r){return String(r[vfCol]||'').trim()===vfVal.trim();}):data;
@@ -943,7 +929,7 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
     fd.forEach(function(row){
       var rk=normKey(row[rowCol],rowNorm); if(!rk||!periodCol) return;
       var rawP=row[periodCol]; if(rawP==null||rawP==='') return;
-      var rawPn=normColVal(rawP); // strip Excel float bleed e.g. 202601.0 → 202601
+      var rawPn=normColVal(rawP);
       var nv=normPd(rawPn,colNorm)||rawPn.toLowerCase();
       var lbl=pMap[nv]; if(!lbl) return;
       var v=valueCol?toNum(row[valueCol]):1;
@@ -979,7 +965,6 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
   return {cells:cells,src:src,rowKeys:rowKeys};
 }
 
-// ── RUN RECON ──
 function runRecon() {
   var pairs=getPairs();
   if(!pairs.length){alert('Add at least one column pair.');return;}
@@ -1038,7 +1023,6 @@ function runRecon() {
   goStep(3);
 }
 
-// ── SLICERS ──
 function buildSlicers(allRows,pairs) {
   document.getElementById('rowSlicerTitle').textContent=META.rowCol1===META.rowCol2?META.rowCol1:META.rowCol1+' / '+META.rowCol2;
   document.getElementById('rowSlicer').innerHTML=allRows.map(function(rk){
@@ -1070,7 +1054,6 @@ function slicerSearch(type,q){
   document.querySelectorAll('#'+id+' .slicer-item').forEach(function(el){el.style.display=el.textContent.trim().toLowerCase().indexOf(q.toLowerCase())>=0?'':'none';});
 }
 
-// ── RENDER ──
 function fmt(n){if(n==null)return'—';return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function sid(rk){try{return btoa(unescape(encodeURIComponent(rk))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);}catch(e){return'r'+(Math.random()+'').slice(2,10);}}
 
@@ -1089,9 +1072,15 @@ function renderPivot(){
   var aPairs=pairs.filter(function(p){return selCols.has(p.label);});
 
   var showRows=curView==='breaks'
-    ?sRows.filter(function(rk){return aPairs.some(function(p){var v1=p1.cells[rk]&&p1.cells[rk][p.label],v2=p2.cells[rk]&&p2.cells[rk][p.label];return v1!=null&&v2!=null&&Math.abs(v1-v2)>tol;});})
+    ?sRows.filter(function(rk){return aPairs.some(function(p){
+        var v1=p1.cells[rk]!=null?p1.cells[rk][p.label]:undefined;
+        var v2=p2.cells[rk]!=null?p2.cells[rk][p.label]:undefined;
+        return v1!=null&&v2!=null&&Math.abs(v1-v2)>tol;
+      });})
     :curView==='missing'
-    ?sRows.filter(function(rk){return aPairs.some(function(p){return (p1.cells[rk]&&p1.cells[rk][p.label])==null||(p2.cells[rk]&&p2.cells[rk][p.label])==null;});})
+    ?sRows.filter(function(rk){return aPairs.some(function(p){
+        return (p1.cells[rk]==null||p1.cells[rk][p.label]==null)||(p2.cells[rk]==null||p2.cells[rk][p.label]==null);
+      });})
     :sRows;
 
   var kh='<th class="row-hdr" rowspan="2">'+(META.rowCol1===META.rowCol2?META.rowCol1:META.rowCol1+' / '+META.rowCol2)+'</th>';
@@ -1104,22 +1093,50 @@ function renderPivot(){
 
   showRows.forEach(function(rk){
     var s=sid(rk), t1=0, t2=0;
-    aPairs.forEach(function(p){t1+=(p1.cells[rk]&&p1.cells[rk][p.label])||0;t2+=(p2.cells[rk]&&p2.cells[rk][p.label])||0;});
+    aPairs.forEach(function(p){
+      var cv1=p1.cells[rk]!=null?p1.cells[rk][p.label]:undefined;
+      var cv2=p2.cells[rk]!=null?p2.cells[rk][p.label]:undefined;
+      t1+=(cv1!=null?cv1:0); t2+=(cv2!=null?cv2:0);
+    });
     var td=t1-t2;
     html+='<tr id="pr_'+s+'"><td class="row-key" onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\')">'
       +'<span class="da" style="font-size:10px;color:#ccc;margin-right:4px">▶</span>'+rk+'</td>';
+
     aPairs.forEach(function(p){
-      var v1=(p1.cells[rk]&&p1.cells[rk][p.label]!=null)?p1.cells[rk][p.label]:null;
-      var v2=(p2.cells[rk]&&p2.cells[rk][p.label]!=null)?p2.cells[rk][p.label]:null;
-      var dc='',dt='';
-      if(v1==null||v2==null){dc='cell-miss';dt='—';ms++;}
-      else{var d=v1-v2;if(Math.abs(d)<=tol){dc='cell-match cell-zero';dt='✓';mc++;}else{dc='cell-break';dt=fmt(d);bc++;}}
-      var click=dc.indexOf('break')>=0||dc.indexOf('miss')>=0?'onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\')"':'';
-      html+='<td style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td><td>'+(v2!=null?fmt(v2):'—')+'</td>';
-      html+='<td class="'+dc+'" '+click+'>'+dt+'</td>';
+      var v1=p1.cells[rk]!=null?p1.cells[rk][p.label]:undefined;
+      var v2=p2.cells[rk]!=null?p2.cells[rk][p.label]:undefined;
+      // Treat undefined as null for display purposes
+      if(v1===undefined) v1=null;
+      if(v2===undefined) v2=null;
+
+      var isBreak=false, isMissing=false;
+      var dc='', dt='';
+      if(v1==null||v2==null){isMissing=true;dc='cell-miss';dt='—';ms++;}
+      else{
+        var d=v1-v2;
+        if(Math.abs(d)<=tol){dc='cell-match cell-zero';dt='✓';mc++;}
+        else{isBreak=true;dc='cell-break';dt=fmt(d);bc++;}
+      }
+
+      // FIX 2: In "breaks only" view, dim cells that are NOT breaks so the actual
+      // breaking values stand out clearly. Non-break cells show greyed-out values
+      // instead of bold ✓ or — to avoid confusion.
+      if(curView==='breaks' && !isBreak) {
+        html+='<td class="cell-dimmed" style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td>'
+          +'<td class="cell-dimmed">'+(v2!=null?fmt(v2):'—')+'</td>'
+          +'<td class="cell-dimmed">·</td>';
+        return; // skip normal rendering for this cell
+      }
+
+      var click=(isBreak||isMissing)?'onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\',this)"':'';
+      html+='<td style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td>'
+           +'<td>'+(v2!=null?fmt(v2):'—')+'</td>'
+           +'<td class="'+dc+'" '+click+'>'+dt+'</td>';
     });
+
     var tc2=Math.abs(td)>tol?'col-total cell-break':'col-total cell-match';
-    html+='<td class="col-total">'+fmt(t1)+'</td><td class="col-total">'+fmt(t2)+'</td><td class="'+tc2+'">'+(Math.abs(td)<=tol?'✓':fmt(td))+'</td></tr>';
+    html+='<td class="col-total">'+fmt(t1)+'</td><td class="col-total">'+fmt(t2)+'</td>'
+         +'<td class="'+tc2+'">'+(Math.abs(td)<=tol?'✓':fmt(td))+'</td></tr>';
     html+='<tr class="drill-row" id="drill_'+s+'"><td colspan="'+tc+'" style="padding:0"><div class="drill-panel" id="dc_'+s+'"></div></td></tr>';
   });
 
@@ -1128,7 +1145,11 @@ function renderPivot(){
   var gt1=0,gt2=0;
   aPairs.forEach(function(p){
     var ct1=0,ct2=0;
-    showRows.forEach(function(rk){ct1+=(p1.cells[rk]&&p1.cells[rk][p.label])||0;ct2+=(p2.cells[rk]&&p2.cells[rk][p.label])||0;});
+    showRows.forEach(function(rk){
+      var v1=p1.cells[rk]!=null?p1.cells[rk][p.label]:null;
+      var v2=p2.cells[rk]!=null?p2.cells[rk][p.label]:null;
+      ct1+=(v1!=null?v1:0); ct2+=(v2!=null?v2:0);
+    });
     gt1+=ct1;gt2+=ct2;
     var cd=ct1-ct2,cc=Math.abs(cd)>tol?'cell-break':'cell-zero';
     html+='<td style="border-left:2px solid #eee">'+fmt(ct1)+'</td><td>'+fmt(ct2)+'</td><td class="'+cc+'">'+(Math.abs(cd)<=tol?'✓':fmt(cd))+'</td>';
@@ -1148,7 +1169,6 @@ function renderPivot(){
   document.getElementById('rcount').textContent=showRows.length+' of '+allRows.length+' rows shown';
 }
 
-// ── DRILL DOWN ──
 function togDrill(rk){
   var s=sid(rk), dr=document.getElementById('drill_'+s); if(!dr) return;
   var isOpen=dr.style.display!=='none';
@@ -1181,7 +1201,6 @@ function buildDrill(rk,s){
   el.innerHTML=mkT(p1.src,META.lbl1,META.amt1)+mkT(p2.src,META.lbl2,META.amt2);
 }
 
-// ── EMAIL ──
 function draftEmail(){
   if(!PR) return;
   var p1=PR.p1,p2=PR.p2,allRows=PR.allRows,pairs=META.pairs,tol=META.tol,lbl1=META.lbl1,lbl2=META.lbl2;
@@ -1214,7 +1233,6 @@ function draftEmail(){
   a.click();
 }
 
-// ── EXPORT CSV ──
 function exportCSV(){
   if(!PR) return;
   var p1=PR.p1,p2=PR.p2,allRows=PR.allRows,pairs=META.pairs,tol=META.tol,lbl1=META.lbl1,lbl2=META.lbl2;
@@ -1243,7 +1261,6 @@ function exportCSV(){
   a.click();
 }
 
-// ── RESET ──
 function resetAll(){
   D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;vmapC=0;
   curView='all';openDrill=null;selRows=new Set();selCols=new Set();

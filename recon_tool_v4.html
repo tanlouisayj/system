@@ -490,6 +490,18 @@ function isDimWide(n, colName) {
   return parseDt(colName) !== null;
 }
 
+// Normalise a column field value to a clean number string if it looks numeric.
+// Handles Excel float bleed: 202601.0 → "202601", 3.0 → "3", 3.5 stays "3.5".
+function normColVal(v) {
+  var s = String(v||'').trim();
+  // If it's a pure integer stored as a float (e.g. 202601.0), strip the decimals
+  if (/^\d+\.0+$/.test(s)) return String(parseInt(s, 10));
+  // If it's any other number with trailing zeros after decimal (e.g. 3.50 → 3.5)
+  var n = parseFloat(s);
+  if (!isNaN(n) && String(n) !== s && /^\d+(\.\d+)?$/.test(s)) return String(n);
+  return s;
+}
+
 function getDimVals(n, colName) {
   if (!colName) return [];
   if (isDimWide(n, colName)) {
@@ -497,7 +509,7 @@ function getDimVals(n, colName) {
   }
   var seen = {}, result = [];
   D[n].forEach(function(r) {
-    var v = String(r[colName]||'').trim();
+    var v = normColVal(r[colName]); // ← normalise numeric bleed before dedup
     if (v && !seen[v]) { seen[v]=1; result.push({key:v, pd:parseDt(v)}); }
   });
   result.sort(function(a,b) {
@@ -635,7 +647,8 @@ function getPairs() {
   var norm=document.getElementById('colnorm').value||'date';
   return Array.from(document.querySelectorAll('#pairList tr')).map(function(tr){
     var f1=tr.querySelector('.pf1').value, lbl=tr.querySelector('.plbl').value||f1;
-    return {f1col:f1, f2col:tr.querySelector('.pf2').value, label:lbl, normVal:normPd(lbl,norm)||lbl};
+    var f1n=normColVal(f1); // normalise numeric bleed for matching
+    return {f1col:f1, f2col:tr.querySelector('.pf2').value, label:lbl, normVal:normPd(f1n,norm)||f1n};
   });
 }
 
@@ -920,7 +933,8 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
     fd.forEach(function(row){
       var rk=normKey(row[rowCol],rowNorm); if(!rk||!periodCol) return;
       var rawP=row[periodCol]; if(rawP==null||rawP==='') return;
-      var nv=normPd(String(rawP),colNorm)||String(rawP).trim().toLowerCase();
+      var rawPn=normColVal(rawP); // strip Excel float bleed e.g. 202601.0 → 202601
+      var nv=normPd(rawPn,colNorm)||rawPn.toLowerCase();
       var lbl=pMap[nv]; if(!lbl) return;
       var v=valueCol?toNum(row[valueCol]):1;
       if(rowKeys.indexOf(rk)<0) rowKeys.push(rk);

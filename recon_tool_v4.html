@@ -344,7 +344,7 @@ select:focus,input:focus{outline:none;border-color:#555}
     </div>
   </div>
   <div class="pivot-wrap"><table class="pivot-table" id="pivotTable"></table></div>
-  <p style="font-size:11px;color:#888;margin-top:6px">Click any row label or red cell to expand source rows. In "Breaks only" view, dimmed cells are matched — only red cells are breaks.</p>
+  <p style="font-size:11px;color:#888;margin-top:6px">Click any row label or red/amber cell to expand source rows. Amber diff values (e.g. +78,000*) mean that row exists in only one file — these drive the Grand Total difference even when no red breaks are visible.</p>
   <div class="actions">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" onclick="goStep(2)">← Edit config</button>
@@ -1111,21 +1111,32 @@ function renderPivot(){
 
       var isBreak=false, isMissing=false;
       var dc='', dt='';
-      if(v1==null||v2==null){isMissing=true;dc='cell-miss';dt='—';ms++;}
+      if(v1==null&&v2==null){dc='cell-zero';dt='—';}
+      else if(v1==null||v2==null){
+        // FIX: one-sided value — show the numeric contribution so users can
+        // trace exactly which rows are driving the grand total difference.
+        // Positive (+) = exists only in File 1; negative (−) = only in File 2.
+        isMissing=true;
+        var mval=v1!=null?v1:-v2;
+        dc='cell-miss';
+        dt=(mval>=0?'+':'')+fmt(mval)+'*';
+        ms++;
+      }
       else{
         var d=v1-v2;
         if(Math.abs(d)<=tol){dc='cell-match cell-zero';dt='✓';mc++;}
         else{isBreak=true;dc='cell-break';dt=fmt(d);bc++;}
       }
 
-      // FIX 2: In "breaks only" view, dim cells that are NOT breaks so the actual
-      // breaking values stand out clearly. Non-break cells show greyed-out values
-      // instead of bold ✓ or — to avoid confusion.
+      // In "breaks only" view, dim non-breaking cells.
+      // Missing cells still show their numeric contribution (+/−) even when dimmed.
       if(curView==='breaks' && !isBreak) {
+        var dimDt=isMissing?dt:'·';
+        var dimCls=isMissing?'cell-miss':'cell-dimmed';
         html+='<td class="cell-dimmed" style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td>'
           +'<td class="cell-dimmed">'+(v2!=null?fmt(v2):'—')+'</td>'
-          +'<td class="cell-dimmed">·</td>';
-        return; // skip normal rendering for this cell
+          +'<td class="'+dimCls+'">'+dimDt+'</td>';
+        return;
       }
 
       var click=(isBreak||isMissing)?'onclick="togDrill(\''+rk.replace(/'/g,"\\'")+'\',this)"':'';

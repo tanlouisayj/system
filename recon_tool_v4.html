@@ -1112,30 +1112,28 @@ function renderPivot(){
       var isBreak=false, isMissing=false;
       var dc='', dt='';
       if(v1==null&&v2==null){dc='cell-zero';dt='—';}
-      else if(v1==null||v2==null){
-        // FIX: one-sided value — show the numeric contribution so users can
-        // trace exactly which rows are driving the grand total difference.
-        // Positive (+) = exists only in File 1; negative (−) = only in File 2.
-        isMissing=true;
-        var mval=v1!=null?v1:-v2;
-        dc='cell-miss';
-        dt=(mval>=0?'+':'')+fmt(mval)+'*';
-        ms++;
-      }
-      else{
-        var d=v1-v2;
-        if(Math.abs(d)<=tol){dc='cell-match cell-zero';dt='✓';mc++;}
-        else{isBreak=true;dc='cell-break';dt=fmt(d);bc++;}
+      else {
+        // Treat null as 0 for comparison: null vs 0.00 = match (✓), null vs 15772 = break (red).
+        // This means one-sided rows with real values correctly appear in "Breaks only" view.
+        var eff1=v1!=null?v1:0;
+        var eff2=v2!=null?v2:0;
+        // Track whether one side was absent (for drill-down tooltip indicator)
+        if(v1==null||v2==null) isMissing=true;
+        var d=eff1-eff2;
+        if(Math.abs(d)<=tol){
+          dc='cell-match cell-zero'; dt='✓'; mc++;
+        } else {
+          isBreak=true;
+          // Append * if one side was absent so user knows diff is one-sided
+          dc='cell-break'; dt=fmt(d)+(isMissing?'*':''); bc++;
+        }
       }
 
-      // In "breaks only" view, dim non-breaking cells.
-      // Missing cells still show their numeric contribution (+/−) even when dimmed.
+      // In "breaks only" view, dim matched cells (·) so only red breaks stand out.
       if(curView==='breaks' && !isBreak) {
-        var dimDt=isMissing?dt:'·';
-        var dimCls=isMissing?'cell-miss':'cell-dimmed';
         html+='<td class="cell-dimmed" style="border-left:2px solid #eee">'+(v1!=null?fmt(v1):'—')+'</td>'
           +'<td class="cell-dimmed">'+(v2!=null?fmt(v2):'—')+'</td>'
-          +'<td class="'+dimCls+'">'+dimDt+'</td>';
+          +'<td class="cell-dimmed">·</td>';
         return;
       }
 
@@ -1172,8 +1170,8 @@ function renderPivot(){
 
   document.getElementById('statBar').innerHTML=
     '<div class="stat green"><div class="stat-n">'+mc+'</div><div class="stat-l">Matched</div></div>'
-    +'<div class="stat red"><div class="stat-n">'+bc+'</div><div class="stat-l">Breaks</div></div>'
-    +'<div class="stat amber"><div class="stat-n">'+ms+'</div><div class="stat-l">Missing</div></div>'
+    +'<div class="stat red"><div class="stat-n">'+bc+'</div><div class="stat-l">Breaks (incl. one-sided*)</div></div>'
+    +'<div class="stat amber"><div class="stat-n">'+ms+'</div><div class="stat-l">Both absent</div></div>'
     +'<div class="stat '+(Math.abs(gd)>tol?'red':'green')+'"><div class="stat-n" style="font-size:16px">'+fmt(gd)+'</div><div class="stat-l">Net diff</div></div>';
   document.getElementById('sumBar').innerHTML='<strong>'+lbl1+'</strong> vs <strong>'+lbl2+'</strong> &nbsp;·&nbsp; '
     +allRows.length+' rows &nbsp;·&nbsp; '+aPairs.length+' period'+(aPairs.length!==1?'s':'')+' &nbsp;·&nbsp; Tolerance: '+tol;
@@ -1220,7 +1218,10 @@ function draftEmail(){
     var v1=p1.cells[rk]&&p1.cells[rk][p.label]!=null?p1.cells[rk][p.label]:null;
     var v2=p2.cells[rk]&&p2.cells[rk][p.label]!=null?p2.cells[rk][p.label]:null;
     if(v1!=null)gt1+=v1;if(v2!=null)gt2+=v2;
-    if(v1==null||v2==null)ms++;else if(Math.abs(v1-v2)>tol)bc++;else mc++;
+    // null treated as 0 — consistent with renderPivot logic
+    var e1=v1!=null?v1:0, e2=v2!=null?v2:0;
+    if(v1==null&&v2==null){}  // both absent, skip
+    else if(Math.abs(e1-e2)>tol)bc++;else mc++;
   });});
   var gd=gt1-gt2, today=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   var status=bc===0&&ms===0?'CLEAR':'EXCEPTIONS FOUND: '+bc+' break'+(bc!==1?'s':'')+', '+ms+' missing';

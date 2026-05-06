@@ -392,6 +392,12 @@ function parseDt(s) {
     var y=num.length<=2 ? 2000+parseInt(num) : parseInt(num.slice(-4));
     return {m:MONTHS[alpha],y:y};
   }
+  // Excel date serial numbers (~40000-55000 = years 2009-2036)
+  var ni=parseInt(n);
+  if (/^\d{5}$/.test(n) && ni>=40000 && ni<=55000) {
+    var ds=new Date((ni-25569)*86400*1000);
+    return {m:ds.getUTCMonth()+1, y:ds.getUTCFullYear()};
+  }
   if (/^\d{6}$/.test(n)) {
     var m1=parseInt(n.slice(0,2)); if (m1>=1&&m1<=12) return {m:m1,y:parseInt(n.slice(2))};
     var y2=parseInt(n.slice(0,4)),m2=parseInt(n.slice(4,6)); if (m2>=1&&m2<=12) return {m:m2,y:y2};
@@ -451,7 +457,11 @@ function pickSheet(n,name,btn) {
 var SNAME={1:'File 1',2:'File 2'};
 
 function loadSheet(n,name,fileName) {
-  var data=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
+  var raw=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
+  // Trim all column header keys — Excel sometimes adds invisible spaces or BOM chars
+  var data=raw.map(function(row){
+    var nr={}; Object.keys(row).forEach(function(k){nr[k.trim()]=row[k];}); return nr;
+  });
   D[n]=data; D[n]._sheet=name;
   SNAME[n]=name;
   var nc=Object.keys(data[0]||{}).length;

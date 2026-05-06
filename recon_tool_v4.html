@@ -359,6 +359,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 
 <script>
 var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, vfC={1:0,2:0}, pC=0, vmapC=0;
+var configReady=false; // true after initConfig() has run for current files; reset when new files loaded
 var curView='all', openDrill=null, selRows=new Set(), selCols=new Set();
 
 var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
@@ -489,6 +490,7 @@ function loadSheet(n,name,fileName) {
   document.getElementById('z'+n+'t').textContent=(fileName?fileName+' — ':'')+name;
   document.getElementById('si'+n).textContent='✓ "'+name+'" — '+data.length+' rows, '+nc+' columns'+(hdrRow>0?' (headers detected on row '+(hdrRow+1)+')':'');
   updateSheetLabels(n,name);
+  configReady=false; // new file loaded — re-init config on next visit to step 2
   checkReady();
 }
 
@@ -501,7 +503,9 @@ function checkReady(){document.getElementById('s1btn').disabled=!(D[1].length&&D
 function goStep(n) {
   document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
   document.getElementById('step'+n).classList.add('active');
-  if (n===2) initConfig();
+  // Only auto-initialise config when files are freshly loaded.
+  // Returning via "Edit config" skips this so all fields stay as the user left them.
+  if (n===2 && !configReady) initConfig();
   var rb=document.getElementById('runBtn');
   if (rb) rb.textContent=(n===2&&PR)?'Re-run':'Run reconciliation';
 }
@@ -629,6 +633,7 @@ function initConfig() {
   fcC={1:0,2:0}; vmapC=0;
 
   if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
+  configReady=true;
 }
 
 function addPair(f1v,f2v,lbl,score) {
@@ -1292,7 +1297,7 @@ function exportCSV(){
 }
 
 function resetAll(){
-  D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;vmapC=0;
+  D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;vmapC=0;configReady=false;
   curView='all';openDrill=null;selRows=new Set();selCols=new Set();
   vfC={1:0,2:0}; fcC={1:0,2:0};
   document.getElementById('s1btn').disabled=true;

@@ -1017,7 +1017,12 @@ function runRecon() {
   }
 
   var p1pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f1col});});
-  var p2pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f2col});});
+  // For File 2, recompute normVal from f2col so buildSide's pMap lookup matches
+  // what's actually stored in File 2's period column — not the File 1 value.
+  var p2pairs=pairs.map(function(p){
+    var f2n=normColVal(p.f2col);
+    return Object.assign({},p,{colInFile:p.f2col, normVal:normPd(f2n,colNorm)||f2n});
+  });
 
   var fd1=applyFilters(D[1],getRowFilters(1));
   var fd2=applyFilters(D[2],getRowFilters(2));

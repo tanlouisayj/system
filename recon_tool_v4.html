@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -106,6 +107,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 <div class="container">
 
 <!-- STEP 1 -->
+
 <div id="step1" class="step active">
   <div class="card">
     <span class="slbl">Step 1 — Upload files &amp; select sheets</span>
@@ -145,9 +147,11 @@ select:focus,input:focus{outline:none;border-color:#555}
 </div>
 
 <!-- STEP 2 -->
+
 <div id="step2" class="step">
 
   <!-- ROWS -->
+
   <div class="card">
     <span class="slbl">Rows — what appears as row labels (e.g. LCIN, Cost Centre)</span>
     <div class="dim-row">
@@ -166,6 +170,7 @@ select:focus,input:focus{outline:none;border-color:#555}
   </div>
 
   <!-- COLUMNS -->
+
   <div class="card">
     <span class="slbl">Columns — what spreads across as column headers</span>
     <p style="font-size:12px;color:#666;margin-bottom:12px">
@@ -173,61 +178,65 @@ select:focus,input:focus{outline:none;border-color:#555}
       The tool reads all unique values and lets you map them to each other.
     </p>
 
-    <!-- Column field selectors -->
-    <div class="grid2" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
-      <div>
-        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-1">File 1</span> — column field</label>
-        <select id="f1dimcol" onchange="onDimColChange()"></select>
-        <p id="f1dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
-      </div>
-      <div>
-        <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-2">File 2</span> — column field</label>
-        <select id="f2dimcol" onchange="onDimColChange()"></select>
-        <p id="f2dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
-      </div>
-    </div>
+```
+<!-- Column field selectors -->
+<div class="grid2" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
+  <div>
+    <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-1">File 1</span> — column field</label>
+    <select id="f1dimcol" onchange="onDimColChange()"></select>
+    <p id="f1dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
+  </div>
+  <div>
+    <label style="font-weight:600;color:#444;margin-bottom:4px"><span class="sname-2">File 2</span> — column field</label>
+    <select id="f2dimcol" onchange="onDimColChange()"></select>
+    <p id="f2dimhint" style="font-size:11px;color:#888;margin-top:4px"></p>
+  </div>
+</div>
 
-    <!-- Pair mapping table -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <p style="font-size:12px;color:#666">Map each value in <span class="sname-1">File 1</span> to the matching value in <span class="sname-2">File 2</span>.</p>
-        <div style="display:flex;align-items:center;gap:5px">
-          <label style="font-size:11px;color:#666;margin:0;white-space:nowrap">Match as</label>
-          <select id="colnorm" style="width:auto;font-size:11px" onchange="autoSuggest()">
-            <option value="date">Date (Jan-26)</option>
-            <option value="text">Text (exact)</option>
-            <option value="num">Number</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="previewPairs()">🔍 Preview</button>
-        <button class="btn btn-sm" onclick="autoSuggest()">⚡ Auto-suggest</button>
-        <button class="btn btn-sm" onclick="addPair()">+ Add pair</button>
-      </div>
-    </div>
-
-    <table class="pair-table">
-      <thead><tr>
-        <th style="width:35%" id="pairHdr1"><span class="sname-1">File 1</span> value</th>
-        <th style="width:7%;text-align:center">↔</th>
-        <th style="width:35%" id="pairHdr2"><span class="sname-2">File 2</span> value</th>
-        <th style="width:15%">Label in output</th>
-        <th style="width:8%"></th>
-      </tr></thead>
-      <tbody id="pairList"></tbody>
-    </table>
-    <p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
-    <div id="pairPrev" class="prev-box" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
-        <button class="rm-btn" onclick="document.getElementById('pairPrev').style.display='none'">×</button>
-      </div>
-      <div id="pairPrevContent"></div>
+<!-- Pair mapping table -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <p style="font-size:12px;color:#666">Map each value in <span class="sname-1">File 1</span> to the matching value in <span class="sname-2">File 2</span>.</p>
+    <div style="display:flex;align-items:center;gap:5px">
+      <label style="font-size:11px;color:#666;margin:0;white-space:nowrap">Match as</label>
+      <select id="colnorm" style="width:auto;font-size:11px" onchange="autoSuggest()">
+        <option value="date">Date (Jan-26)</option>
+        <option value="text">Text (exact)</option>
+        <option value="num">Number</option>
+      </select>
     </div>
   </div>
+  <div style="display:flex;gap:6px">
+    <button class="btn btn-sm" onclick="previewPairs()">🔍 Preview</button>
+    <button class="btn btn-sm" onclick="autoSuggest()">⚡ Auto-suggest</button>
+    <button class="btn btn-sm" onclick="addPair()">+ Add pair</button>
+  </div>
+</div>
 
-    <!-- VALUE MAPPING -->
+<table class="pair-table">
+  <thead><tr>
+    <th style="width:35%" id="pairHdr1"><span class="sname-1">File 1</span> value</th>
+    <th style="width:7%;text-align:center">↔</th>
+    <th style="width:35%" id="pairHdr2"><span class="sname-2">File 2</span> value</th>
+    <th style="width:15%">Label in output</th>
+    <th style="width:8%"></th>
+  </tr></thead>
+  <tbody id="pairList"></tbody>
+</table>
+<p id="pairMsg" style="font-size:11px;color:#888;margin-top:6px"></p>
+<div id="pairPrev" class="prev-box" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="font-size:12px;font-weight:600;color:#555">Preview — rows matched per pair</span>
+    <button class="rm-btn" onclick="document.getElementById('pairPrev').style.display='none'">×</button>
+  </div>
+  <div id="pairPrevContent"></div>
+</div>
+```
+
+  </div>
+
+  <!-- VALUE MAPPING -->
+
   <div class="card" id="vmapCard">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
       <div>
@@ -240,6 +249,7 @@ select:focus,input:focus{outline:none;border-color:#555}
   </div>
 
   <!-- VALUES -->
+
   <div class="grid2">
     <div class="card">
       <span class="slbl">Values — <span class="sname-1">File 1</span></span>
@@ -263,7 +273,7 @@ select:focus,input:focus{outline:none;border-color:#555}
       </div>
     </div>
     <div class="card">
-      <span class="slbl" >Values — <span class="sname-2">File 2</span></span>
+      <span class="slbl">Values — <span class="sname-2">File 2</span></span>
       <div style="margin-bottom:8px">
         <label>Amount column <span id="amt2hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
         <select id="amt2"></select>
@@ -286,6 +296,7 @@ select:focus,input:focus{outline:none;border-color:#555}
   </div>
 
   <!-- TOLERANCE + FILTERS -->
+
   <div class="card">
     <div class="grid3">
       <div>
@@ -312,6 +323,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 </div>
 
 <!-- STEP 3 -->
+
 <div id="step3" class="step">
   <div id="statBar" class="stat-bar"></div>
   <div id="sumBar" class="sum-bar"></div>
@@ -364,7 +376,8 @@ select:focus,input:focus{outline:none;border-color:#555}
 
 <script>
 // ── STATE ──
-var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, pC=0;
+// FIX: vfC is now declared globally so it is always available before initConfig() runs.
+var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, vfC={1:0,2:0}, pC=0, vmapC=0;
 var curView='all', openDrill=null, selRows=new Set(), selCols=new Set();
 
 // ── DATE PARSING ──
@@ -435,7 +448,7 @@ function pickSheet(n,name,btn) {
   loadSheet(n,name,null);
 }
 
-var SNAME={1:'File 1',2:'File 2'}; // sheet names, updated on load
+var SNAME={1:'File 1',2:'File 2'};
 
 function loadSheet(n,name,fileName) {
   var data=XLSX.utils.sheet_to_json(WB[n].Sheets[name],{defval:''});
@@ -449,7 +462,6 @@ function loadSheet(n,name,fileName) {
 }
 
 function updateSheetLabels(n,name) {
-  // Update every element with class sname-n to the sheet name
   document.querySelectorAll('.sname-'+n).forEach(function(el){el.textContent=name;});
 }
 
@@ -471,128 +483,6 @@ function fillSel(id,n,sel) {
   document.getElementById(id).innerHTML=getCols(n).map(function(c){
     return '<option'+(c===sel?' selected':'')+'>'+c+'</option>';
   }).join('');
-}
-
-function getPairOpts(n) {
-  var src=document.getElementById('f'+n+'src').value;
-  // Wide/header format: options are column names from the file
-  if (src==='header') {
-    return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
-  }
-  // Long/values format: options are unique period values from the period column
-  var pcol=document.getElementById('f'+n+'pcol').value;
-  if (!pcol) {
-    // Period column not set yet — fall back to showing all column names
-    // so the dropdown is still interactive (user can pick manually)
-    return '<optgroup label="Period column not set — showing all columns">'
-      +getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('')
-      +'</optgroup>';
-  }
-  var norm=document.getElementById('colnorm').value;
-  var seen=[];
-  D[n].forEach(function(r){var v=String(r[pcol]||'').trim();if(v&&seen.indexOf(v)<0)seen.push(v);});
-  seen.sort(function(a,b){
-    var da=parseDt(a),db=parseDt(b);
-    if(da&&db) return dtSort(da)-dtSort(db);
-    return a.localeCompare(b,undefined,{numeric:true});
-  });
-  if(!seen.length) return getCols(n).map(function(c){return '<option>'+c+'</option>';}).join('');
-  return seen.map(function(v){return '<option>'+v+'</option>';}).join('');
-}
-
-function refreshOpts(n) {
-  var cls=n===1?'.pf1':'.pf2';
-  var opts=getPairOpts(n);
-  document.querySelectorAll('#pairList tr').forEach(function(tr){
-    var sel=tr.querySelector(cls); if(!sel) return;
-    var cur=sel.value; sel.innerHTML=opts;
-    for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===cur||sel.options[i].text===cur){sel.value=sel.options[i].value;break;}}
-  });
-}
-
-function updateSrc() {
-  [1,2].forEach(function(n){
-    var src=document.getElementById('f'+n+'src').value, isLong=src==='values';
-    var ld=document.getElementById('f'+n+'long');
-    ld.style.display=isLong?'grid':'none';
-    if (isLong) {
-      var cx=getCols(n), opts='<option value="">— select —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
-      document.getElementById('f'+n+'pcol').innerHTML=opts;
-      document.getElementById('f'+n+'vcol').innerHTML=opts;
-      var pg=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
-      var ag=cx.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal/i.test(c);});
-      if(pg) document.getElementById('f'+n+'pcol').value=pg;
-      if(ag) document.getElementById('f'+n+'vcol').value=ag;
-    }
-    refreshOpts(n);
-  });
-}
-
-function getSrcInfo() {
-  return {
-    f1src:document.getElementById('f1src').value,
-    f2src:document.getElementById('f2src').value,
-    f1pcol:document.getElementById('f1pcol').value||null,
-    f1vcol:document.getElementById('f1vcol').value||null,
-    f2pcol:document.getElementById('f2pcol').value||null,
-    f2vcol:document.getElementById('f2vcol').value||null
-  };
-}
-
-function initConfig() {
-  var c1=getCols(1), c2=getCols(2);
-  var blank='<option value="">— select —</option>';
-
-  // Row key
-  var rg1=c1.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c1[0];
-  var rg2=c2.find(function(c){return c.toLowerCase()===rg1.toLowerCase();})||
-    c2.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c2[0];
-  fillSel('row1',1,rg1); fillSel('row2',2,rg2);
-
-  // Amount cols
-  document.getElementById('amt1').innerHTML=blank+c1.map(function(c){return '<option>'+c+'</option>';}).join('');
-  document.getElementById('amt2').innerHTML=blank+c2.map(function(c){return '<option>'+c+'</option>';}).join('');
-  var ag1=c1.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal|pnl/i.test(c);});
-  var ag2=c2.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal|pnl/i.test(c);});
-  if(ag1) document.getElementById('amt1').value=ag1;
-  if(ag2) document.getElementById('amt2').value=ag2;
-
-  // Value filter cols
-  var vfo='<option value="">— no filter —</option>';
-  document.getElementById('vfcol1').innerHTML=vfo+c1.map(function(c){return '<option>'+c+'</option>';}).join('');
-  document.getElementById('vfcol2').innerHTML=vfo+c2.map(function(c){return '<option>'+c+'</option>';}).join('');
-  var vg1=c1.find(function(c){return /datatype|type|measure|basis|scenario|version|mtd|ytd/i.test(c);});
-  var vg2=c2.find(function(c){return /datatype|type|measure|basis|scenario|version|mtd|ytd/i.test(c);});
-  if(vg1){document.getElementById('vfcol1').value=vg1;updateVFVals(1);}
-  if(vg2){document.getElementById('vfcol2').value=vg2;updateVFVals(2);}
-
-  // Pre-fill labels from sheet names
-  if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
-  if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
-
-  // Populate dimension column dropdowns, guess best column
-  [1,2].forEach(function(n){
-    var cx=n===1?c1:c2;
-    var opts='<option value="">— select column —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
-    document.getElementById('f'+n+'dimcol').innerHTML=opts;
-    // Guess: prefer date-looking column headers (wide), else period-named column (long)
-    var dateCols=cx.filter(function(c){return parseDt(c)!==null;});
-    var periodCol=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
-    var guess=dateCols.length>0?dateCols[0]:(periodCol||cx[0]);
-    document.getElementById('f'+n+'dimcol').value=guess;
-  });
-  onDimColChange();
-
-  // Clear filters
-  document.getElementById('flist1').innerHTML='';
-  document.getElementById('flist2').innerHTML='';
-  document.getElementById('vflist1').innerHTML='';
-  document.getElementById('vflist2').innerHTML='';
-  document.getElementById('vmapList').innerHTML='';
-  fcC={1:0,2:0}; vfC={1:0,2:0}; vmapC=0;
-
-  // Auto-suggest if no pairs yet
-  if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
 }
 
 // ── COLUMN DIMENSION ──
@@ -651,6 +541,66 @@ function getSrcInfo() {
     f2pcol: isDimWide(2,f2col)?null:f2col,
     f1vcol: null, f2vcol: null
   };
+}
+
+function refreshOpts(n) {
+  var cls=n===1?'.pf1':'.pf2';
+  var opts=getPairOpts(n);
+  document.querySelectorAll('#pairList tr').forEach(function(tr){
+    var sel=tr.querySelector(cls); if(!sel) return;
+    var cur=sel.value; sel.innerHTML=opts;
+    for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===cur||sel.options[i].text===cur){sel.value=sel.options[i].value;break;}}
+  });
+}
+
+function initConfig() {
+  var c1=getCols(1), c2=getCols(2);
+  var blank='<option value="">— select —</option>';
+
+  // Row key
+  var rg1=c1.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c1[0];
+  var rg2=c2.find(function(c){return c.toLowerCase()===rg1.toLowerCase();})||
+    c2.find(function(c){return /lcin|code|id|centre|center|cc|entity|acct/i.test(c);})||c2[0];
+  fillSel('row1',1,rg1); fillSel('row2',2,rg2);
+
+  // Amount cols
+  document.getElementById('amt1').innerHTML=blank+c1.map(function(c){return '<option>'+c+'</option>';}).join('');
+  document.getElementById('amt2').innerHTML=blank+c2.map(function(c){return '<option>'+c+'</option>';}).join('');
+  var ag1=c1.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal|pnl/i.test(c);});
+  var ag2=c2.find(function(c){return /amount|amt|value|balance|lcy|fcy|bal|pnl/i.test(c);});
+  if(ag1) document.getElementById('amt1').value=ag1;
+  if(ag2) document.getElementById('amt2').value=ag2;
+
+  // Reset value filter counters and lists
+  vfC={1:0,2:0};
+  document.getElementById('vflist1').innerHTML='';
+  document.getElementById('vflist2').innerHTML='';
+
+  // Pre-fill labels from sheet names
+  if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
+  if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
+
+  // Populate dimension column dropdowns
+  [1,2].forEach(function(n){
+    var cx=n===1?c1:c2;
+    var opts='<option value="">— select column —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
+    document.getElementById('f'+n+'dimcol').innerHTML=opts;
+    // Guess best column: prefer date-looking headers (wide), else period-named column (long)
+    var dateCols=cx.filter(function(c){return parseDt(c)!==null;});
+    var periodCol=cx.find(function(c){return /period|month|mth|yyyymm|mmyyyy/i.test(c);});
+    var guess=dateCols.length>0?dateCols[0]:(periodCol||cx[0]);
+    if(guess) document.getElementById('f'+n+'dimcol').value=guess;
+  });
+  onDimColChange();
+
+  // Clear row filters and vmaps
+  document.getElementById('flist1').innerHTML='';
+  document.getElementById('flist2').innerHTML='';
+  document.getElementById('vmapList').innerHTML='';
+  fcC={1:0,2:0}; vmapC=0;
+
+  // Auto-suggest pairs if none exist
+  if (document.querySelectorAll('#pairList tr').length===0) autoSuggest();
 }
 
 // ── PAIR TABLE ──
@@ -724,6 +674,7 @@ function autoSuggest() {
   var m=pairs.filter(function(p){return p.score===100;}).length;
   document.getElementById('pairMsg').textContent=m+' of '+pairs.length+' values matched.'+(m<pairs.length?' Check ? pairs.':'');
 }
+
 function previewPairs() {
   var pairs=getPairs(), si=getSrcInfo(), norm=document.getElementById('colnorm').value||'date';
   var rowCol1=document.getElementById('row1').value, rowCol2=document.getElementById('row2').value;
@@ -731,8 +682,6 @@ function previewPairs() {
   var fd2=applyFilters(D[2],getRowFilters(2));
   var ffd1=applyVFs(fd1,getVFs(1));
   var ffd2=applyVFs(fd2,getVFs(2));
-  var c1col=document.getElementById('f1dimcol').value;
-  var c2col=document.getElementById('f2dimcol').value;
 
   var html='<table><thead><tr><th>Label</th><th>'+SNAME[1]+' value</th><th style="text-align:right">F1 rows</th><th>'+SNAME[2]+' value</th><th style="text-align:right">F2 rows</th><th style="text-align:center">OK?</th></tr></thead><tbody>';
   var warnings=[];
@@ -762,16 +711,98 @@ function previewPairs() {
   document.getElementById('pairPrev').style.display='';
 }
 
-// ── VALUE MAPPING ──
-var vmapC = 0;
+// ── VALUE FILTERS ──
+function addVF(n) {
+  var id='vf'+n+'_'+(++vfC[n]);
+  var cx=getCols(n);
+  var opts='<option value="">— col —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
+  var div=document.createElement('div'); div.className='fr-row'; div.id=id;
+  div.innerHTML='<select class="vfcol" onchange="updateVFVals_inline(this)">'+opts+'</select>'
+    +'<span style="text-align:center;color:#ccc;font-size:13px;padding:0 2px">=</span>'
+    +'<select class="vfval"><option value="">— val —</option></select>'
+    +'<button class="rm-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
+  document.getElementById('vflist'+n).appendChild(div);
+}
 
+function updateVFVals_inline(sel) {
+  var n=sel.closest('[id^="vflist"]')?1:1; // side determined from container
+  var container=sel.closest('.card');
+  var side=container&&container.querySelector('#vflist1')===sel.closest('[id^="vf"]').parentNode?1:2;
+  var col=sel.value; if(!col) return;
+  var vals=[]; D[side].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
+  vals.sort();
+  var vs=sel.parentNode.querySelector('.vfval');
+  vs.innerHTML='<option value="">— val —</option>'+vals.map(function(v){return '<option>'+v+'</option>';}).join('');
+}
+
+function updateVFVals(n) {
+  // Called from initConfig for auto-guessed filter column
+}
+
+function getVFs(n) {
+  var list=document.getElementById('vflist'+n); if(!list) return [];
+  var result=[];
+  list.querySelectorAll('.fr-row').forEach(function(row){
+    var col=row.querySelector('.vfcol').value;
+    var val=row.querySelector('.vfval').value;
+    if(col&&val) result.push({col:col,val:val});
+  });
+  return result;
+}
+
+function applyVFs(data, vfs) {
+  if(!vfs||!vfs.length) return data;
+  return data.filter(function(r){
+    return vfs.every(function(f){return String(r[f.col]||'').trim()===f.val;});
+  });
+}
+
+// ── ROW FILTERS ──
+function addRowFilter(n) {
+  var id='rf'+n+'_'+(++fcC[n]);
+  var cx=getCols(n);
+  var opts='<option value="">— col —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
+  var div=document.createElement('div'); div.className='fr-row'; div.id=id;
+  div.innerHTML='<select class="rfcol" onchange="updateRFVals(this,'+n+')">'+opts+'</select>'
+    +'<span style="text-align:center;color:#ccc;font-size:13px;padding:0 2px">=</span>'
+    +'<select class="rfval"><option value="">— val —</option></select>'
+    +'<button class="rm-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
+  document.getElementById('flist'+n).appendChild(div);
+}
+
+function updateRFVals(sel,n) {
+  var col=sel.value; if(!col) return;
+  var vals=[]; D[n].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
+  vals.sort();
+  var vs=sel.parentNode.querySelector('.rfval');
+  vs.innerHTML='<option value="">— val —</option>'+vals.map(function(v){return '<option>'+v+'</option>';}).join('');
+}
+
+function getRowFilters(n) {
+  var list=document.getElementById('flist'+n); if(!list) return [];
+  var result=[];
+  list.querySelectorAll('.fr-row').forEach(function(row){
+    var col=row.querySelector('.rfcol').value;
+    var val=row.querySelector('.rfval').value;
+    if(col&&val) result.push({col:col,val:val});
+  });
+  return result;
+}
+
+function applyFilters(data, filters) {
+  if(!filters||!filters.length) return data;
+  return data.filter(function(r){
+    return filters.every(function(f){return String(r[f.col]||'').trim()===f.val;});
+  });
+}
+
+// ── VALUE MAPPING ──
 function addVmap() {
   var id = 'vm_' + (++vmapC);
   var c1 = getCols(1), c2 = getCols(2);
   var d = document.createElement('div');
   d.className = 'vmap-block'; d.id = id;
 
-  // Header
   var hdr = document.createElement('div'); hdr.className = 'vmap-header';
   var colRow = document.createElement('div'); colRow.className = 'vmap-colrow'; colRow.style.flex = '1';
   var s1 = document.createElement('select'); s1.className = 'vmc1';
@@ -787,14 +818,12 @@ function addVmap() {
   rmBtn.onclick = function(){document.getElementById(id).remove();};
   hdr.appendChild(colRow); hdr.appendChild(rmBtn);
 
-  // Rows container
   var rowsDiv = document.createElement('div'); rowsDiv.className = 'vmap-rows'; rowsDiv.style.cssText = 'padding:8px 12px';
   rowsDiv.innerHTML = '<p style="font-size:11px;color:#aaa">Select columns above to map values.</p>';
 
   d.appendChild(hdr); d.appendChild(rowsDiv);
   document.getElementById('vmapList').appendChild(d);
 
-  // Auto-guess columns
   var g1 = c1.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c1[0];
   var g2 = c2.find(function(c){return c.toLowerCase()===g1.toLowerCase();})||
     c2.find(function(c){return /lcin|code|entity|version|type|basis|scenario/i.test(c);})||c2[0];
@@ -807,11 +836,9 @@ function buildVmapRows(id) {
   var c1 = block.querySelector('.vmc1').value;
   var c2 = block.querySelector('.vmc2').value;
   if(!c1||!c2) return;
-  // Get unique values from each column
   var vals1 = []; D[1].forEach(function(r){var v=String(r[c1]||'').trim();if(v&&vals1.indexOf(v)<0)vals1.push(v);});
   var vals2 = []; D[2].forEach(function(r){var v=String(r[c2]||'').trim();if(v&&vals2.indexOf(v)<0)vals2.push(v);});
   vals1.sort(); vals2.sort();
-  var v2opts = '<option value="">— same as F1 —</option>'+vals2.map(function(v){return '<option>'+v+'</option>';}).join('');
   var n1 = SNAME[1], n2 = SNAME[2];
   var html = '<table class="vmap-table"><thead><tr>'
     + '<th>'+n1+' value ('+c1+')</th>'
@@ -819,7 +846,6 @@ function buildVmapRows(id) {
     + '<th>'+n2+' equivalent ('+c2+')</th>'
     + '</tr></thead><tbody>';
   vals1.forEach(function(v){
-    // Auto-match: same value, or date-normalised equivalent
     var autoMatch = '';
     var pd1 = parseDt(v);
     if(pd1) {
@@ -837,7 +863,6 @@ function buildVmapRows(id) {
 }
 
 function getVmaps() {
-  // Returns array of {f1col, f2col, map: {f1val: f2val}}
   return Array.from(document.querySelectorAll('.vmap-block')).map(function(block){
     var f1col = block.querySelector('.vmc1').value;
     var f2col = block.querySelector('.vmc2').value;
@@ -850,7 +875,6 @@ function getVmaps() {
 }
 
 function applyVmaps(data, vmaps, side) {
-  // side=1 or side=2: apply mapping to convert File 2 values to File 1 equivalents
   if(!vmaps.length) return data;
   return data.map(function(row){
     var r = Object.assign({}, row);
@@ -858,10 +882,9 @@ function applyVmaps(data, vmaps, side) {
       var col = side===1 ? vm.f1col : vm.f2col;
       if(side===2 && col && vm.map) {
         var curVal = String(r[col]||'').trim();
-        // Build reverse map: f2val → f1val
         var revMap = {};
         Object.keys(vm.map).forEach(function(f1v){revMap[vm.map[f1v]]=f1v;});
-        if(revMap[curVal]) r[col] = revMap[curVal]; // normalise F2 value to F1 equivalent
+        if(revMap[curVal]) r[col] = revMap[curVal];
       }
     });
     return r;
@@ -892,7 +915,6 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
   }
 
   if (srcType==='values') {
-    // Long format: periodCol has period values, valueCol has amounts
     var pMap={};
     pairs.forEach(function(p){pMap[p.normVal]=p.label;});
     fd.forEach(function(row){
@@ -908,13 +930,12 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
       agg(cells[rk],cnts[rk],lbl,v);
     });
   } else {
-    // Wide/header format: col name IS the period, cell value IS the amount
     fd.forEach(function(row){
       var rk=normKey(row[rowCol],rowNorm); if(!rk) return;
       if(rowKeys.indexOf(rk)<0) rowKeys.push(rk);
       if(!cells[rk]){cells[rk]={};cnts[rk]={};src[rk]={};}
       pairs.forEach(function(p){
-        var rawVal=row[p.colInFile]; // colInFile set per-side in runRecon
+        var rawVal=row[p.colInFile];
         if(rawVal===undefined||rawVal==='') return;
         var v=toNum(rawVal);
         if(!src[rk][p.label])src[rk][p.label]=[];
@@ -924,7 +945,6 @@ function buildSide(data,rowCol,rowNorm,pairs,aggType,srcType,periodCol,valueCol,
     });
   }
 
-  // Finalise averages
   if(aggType==='avg') {
     Object.keys(cells).forEach(function(rk){
       Object.keys(cells[rk]).forEach(function(lbl){if(cnts[rk][lbl])cells[rk][lbl]/=cnts[rk][lbl];});
@@ -950,15 +970,12 @@ function runRecon() {
   var lbl2=document.getElementById('lbl2').value||'File 2';
   var amt1=document.getElementById('amt1').value;
   var amt2=document.getElementById('amt2').value;
-  // Multiple value filters — applied inside buildSide via applyVFs
-  var vfc1='', vfv1='', vfc2='', vfv2=''; // legacy vars kept for compat
   var colNorm=document.getElementById('colnorm').value||'date';
   var si=getSrcInfo();
 
   META={rowCol1:rowCol1,rowCol2:rowCol2,rowNorm:rowNorm,agg1:agg1,agg2:agg2,
     tol:tol,lbl1:lbl1,lbl2:lbl2,pairs:pairs,colNorm:colNorm,si:si,amt1:amt1,amt2:amt2};
 
-  // Validate: if header mode and column not in File 2, warn
   var fd2check=applyFilters(D[2],getRowFilters(2));
   if(si.f2src==='header'&&fd2check.length>0){
     var f2cols=Object.keys(fd2check[0]||{});
@@ -971,17 +988,13 @@ function runRecon() {
     }
   }
 
-  // Tag each pair with the correct column name per side
   var p1pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f1col});});
   var p2pairs=pairs.map(function(p){return Object.assign({},p,{colInFile:p.f2col});});
 
   var fd1=applyFilters(D[1],getRowFilters(1));
   var fd2=applyFilters(D[2],getRowFilters(2));
-
-  // Apply value filters before building pivot
   var vfFilters1=getVFs(1), vfFilters2=getVFs(2);
   var fvd1=applyVFs(fd1,vfFilters1), fvd2=applyVFs(fd2,vfFilters2);
-  // Apply column value mappings (normalise File 2 values to File 1 equivalents)
   var vmaps=getVmaps();
   var ffd1=applyVmaps(fvd1,vmaps,1), ffd2=applyVmaps(fvd2,vmaps,2);
   var p1=buildSide(ffd1,rowCol1,rowNorm,p1pairs,agg1,si.f1src,si.f1pcol,si.f1vcol||amt1,'','',colNorm);
@@ -1208,8 +1221,9 @@ function exportCSV(){
 
 // ── RESET ──
 function resetAll(){
-  D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;
+  D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;vmapC=0;
   curView='all';openDrill=null;selRows=new Set();selCols=new Set();
+  vfC={1:0,2:0}; fcC={1:0,2:0};
   document.getElementById('s1btn').disabled=true;
   document.getElementById('pairList').innerHTML='';
   document.getElementById('lbl1').value='';document.getElementById('lbl2').value='';
@@ -1217,7 +1231,6 @@ function resetAll(){
   document.querySelectorAll('.sname-1').forEach(function(el){el.textContent='File 1';});
   document.querySelectorAll('.sname-2').forEach(function(el){el.textContent='File 2';});
   ['vflist1','vflist2','flist1','flist2','vmapList'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
-  vfC={1:0,2:0}; vmapC=0;
   [1,2].forEach(function(n){
     document.getElementById('zone'+n).classList.remove('loaded');
     document.getElementById('z'+n+'t').textContent='Click or drag file here';
@@ -1227,5 +1240,6 @@ function resetAll(){
   });
 }
 </script>
+
 </body>
 </html>

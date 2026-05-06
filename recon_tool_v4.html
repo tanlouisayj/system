@@ -45,7 +45,12 @@ select:focus,input:focus{outline:none;border-color:#555}
 .rm-btn:hover{background:#fee;color:#c0392b;border-color:#f5c6c6}
 .dim-row{display:grid;grid-template-columns:1fr 26px 1fr 110px;gap:7px;align-items:end}
 .dim-arrow{text-align:center;font-size:16px;color:#ccc;padding-bottom:8px}
-.fr-row{display:grid;grid-template-columns:1fr 85px 1fr 26px;gap:5px;align-items:center;margin-bottom:5px}
+.fr-row{display:grid;grid-template-columns:1fr 20px 1fr 26px;gap:5px;align-items:start;margin-bottom:8px}
+.rfval-list{border:1px solid #ddd;border-radius:5px;max-height:110px;overflow-y:auto;background:#fff;min-width:100%}
+.rfval-list label{display:flex;align-items:center;gap:6px;padding:3px 8px;font-size:11px;cursor:pointer;border-bottom:1px solid #f5f5f5;white-space:nowrap}
+.rfval-list label:last-child{border-bottom:none}
+.rfval-list label:hover{background:#f5f5f5}
+.rfval-search{width:100%;padding:3px 7px;border:none;border-bottom:1px solid #e0e0e0;font-size:11px;font-family:inherit;outline:none}
 .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
 .stat{background:#f8f8f8;border-radius:8px;padding:.9rem;text-align:center}
 .stat-n{font-size:20px;font-weight:600}.stat-l{font-size:11px;color:#888;margin-top:2px}
@@ -251,33 +256,28 @@ select:focus,input:focus{outline:none;border-color:#555}
         </div>
         <div><label>Label</label><input type="text" id="lbl1" placeholder="e.g. Essbase"></div>
       </div>
-      <div style="padding-top:8px;border-top:1px solid #f0f0f0">
-        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. DataType = MTD, Version = Actual)</span></label>
-        <div id="vflist1"></div>
-        <button class="btn btn-sm" onclick="addVF(1)" style="margin-top:4px">+ Add value filter</button>
-      </div>
+
+```
+</div>
+<div class="card">
+  <span class="slbl">Values — <span class="sname-2">File 2</span></span>
+  <div style="margin-bottom:8px">
+    <label>Amount column <span id="amt2hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
+    <select id="amt2"></select>
+  </div>
+  <div class="grid2" style="margin-bottom:8px">
+    <div><label>Aggregation</label>
+      <select id="agg2">
+        <option value="sum">Sum</option><option value="count">Count rows</option>
+        <option value="avg">Average</option><option value="min">Min</option><option value="max">Max</option>
+      </select>
     </div>
-    <div class="card">
-      <span class="slbl">Values — <span class="sname-2">File 2</span></span>
-      <div style="margin-bottom:8px">
-        <label>Amount column <span id="amt2hint" style="font-weight:400;color:#888;font-size:11px">(only needed for "Values in a column" format)</span></label>
-        <select id="amt2"></select>
-      </div>
-      <div class="grid2" style="margin-bottom:8px">
-        <div><label>Aggregation</label>
-          <select id="agg2">
-            <option value="sum">Sum</option><option value="count">Count rows</option>
-            <option value="avg">Average</option><option value="min">Min</option><option value="max">Max</option>
-          </select>
-        </div>
-        <div><label>Label</label><input type="text" id="lbl2" placeholder="e.g. GL"></div>
-      </div>
-      <div style="padding-top:8px;border-top:1px solid #f0f0f0">
-        <label style="font-weight:500;margin-bottom:5px">Value filters <span style="font-weight:400;color:#aaa;font-size:11px">(e.g. DataType = MTD)</span></label>
-        <div id="vflist2"></div>
-        <button class="btn btn-sm" onclick="addVF(2)" style="margin-top:4px">+ Add value filter</button>
-      </div>
-    </div>
+    <div><label>Label</label><input type="text" id="lbl2" placeholder="e.g. GL"></div>
+  </div>
+
+</div>
+```
+
   </div>
 
   <div class="card">
@@ -358,7 +358,7 @@ select:focus,input:focus{outline:none;border-color:#555}
 <div class="footer">All data stays in your browser — nothing is uploaded or shared.</div>
 
 <script>
-var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, vfC={1:0,2:0}, pC=0, vmapC=0;
+var D={1:[],2:[]}, WB={1:null,2:null}, PR=null, META={}, fcC={1:0,2:0}, pC=0, vmapC=0;
 var configReady=false; // true after initConfig() has run for current files; reset when new files loaded
 var curView='all', openDrill=null, selRows=new Set(), selCols=new Set();
 
@@ -609,9 +609,6 @@ function initConfig() {
   if(ag1) document.getElementById('amt1').value=ag1;
   if(ag2) document.getElementById('amt2').value=ag2;
 
-  vfC={1:0,2:0};
-  document.getElementById('vflist1').innerHTML='';
-  document.getElementById('vflist2').innerHTML='';
 
   if(!document.getElementById('lbl1').value) document.getElementById('lbl1').value=SNAME[1];
   if(!document.getElementById('lbl2').value) document.getElementById('lbl2').value=SNAME[2];
@@ -713,8 +710,8 @@ function previewPairs() {
   var rowCol1=document.getElementById('row1').value, rowCol2=document.getElementById('row2').value;
   var fd1=applyFilters(D[1],getRowFilters(1));
   var fd2=applyFilters(D[2],getRowFilters(2));
-  var ffd1=applyVFs(fd1,getVFs(1));
-  var ffd2=applyVFs(fd2,getVFs(2));
+  var ffd1=fd1;
+  var ffd2=fd2;
 
   var html='<table><thead><tr><th>Label</th><th>'+SNAME[1]+' value</th><th style="text-align:right">F1 rows</th><th>'+SNAME[2]+' value</th><th style="text-align:right">F2 rows</th><th style="text-align:center">OK?</th></tr></thead><tbody>';
   var warnings=[];
@@ -745,49 +742,8 @@ function previewPairs() {
 }
 
 // ── VALUE FILTERS ──
-// FIX 1: addVF now passes the side (n) explicitly to updateVFVals_inline
-// so the dropdown always reads from the correct file's data (D[1] vs D[2]).
-function addVF(n) {
-  var id='vf'+n+'_'+(++vfC[n]);
-  var cx=getCols(n);
-  var opts='<option value="">— col —</option>'+cx.map(function(c){return '<option>'+c+'</option>';}).join('');
-  var div=document.createElement('div'); div.className='fr-row'; div.id=id;
-  // Pass n explicitly — previously this was updateVFVals_inline(this) with no side arg,
-  // causing the function to guess the wrong side via fragile DOM traversal.
-  div.innerHTML='<select class="vfcol" onchange="updateVFVals_inline(this,'+n+')">'+opts+'</select>'
-    +'<span style="text-align:center;color:#ccc;font-size:13px;padding:0 2px">=</span>'
-    +'<select class="vfval"><option value="">— val —</option></select>'
-    +'<button class="rm-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
-  document.getElementById('vflist'+n).appendChild(div);
-}
 
-// FIX 1 (cont): Accept side as a direct parameter instead of trying to infer it from DOM.
-function updateVFVals_inline(sel, side) {
-  var col=sel.value; if(!col) return;
-  var vals=[];
-  D[side].forEach(function(r){var v=String(r[col]||'').trim();if(v&&vals.indexOf(v)<0)vals.push(v);});
-  vals.sort();
-  var vs=sel.parentNode.querySelector('.vfval');
-  vs.innerHTML='<option value="">— val —</option>'+vals.map(function(v){return '<option>'+v+'</option>';}).join('');
-}
 
-function getVFs(n) {
-  var list=document.getElementById('vflist'+n); if(!list) return [];
-  var result=[];
-  list.querySelectorAll('.fr-row').forEach(function(row){
-    var col=row.querySelector('.vfcol').value;
-    var val=row.querySelector('.vfval').value;
-    if(col&&val) result.push({col:col,val:val});
-  });
-  return result;
-}
-
-function applyVFs(data, vfs) {
-  if(!vfs||!vfs.length) return data;
-  return data.filter(function(r){
-    return vfs.every(function(f){return String(r[f.col]||'').trim()===f.val;});
-  });
-}
 
 function addRowFilter(n) {
   var id='rf'+n+'_'+(++fcC[n]);
@@ -813,9 +769,9 @@ function getRowFilters(n) {
   var list=document.getElementById('flist'+n); if(!list) return [];
   var result=[];
   list.querySelectorAll('.fr-row').forEach(function(row){
-    var col=row.querySelector('.rfcol').value;
-    var val=row.querySelector('.rfval').value;
-    if(col&&val) result.push({col:col,val:val});
+    var col=row.querySelector('.rfcol').value; if(!col) return;
+    var vals=Array.from(row.querySelectorAll('.rfval-list input:checked')).map(function(cb){return cb.value;});
+    if(vals.length) result.push({col:col,vals:vals});
   });
   return result;
 }
@@ -823,7 +779,11 @@ function getRowFilters(n) {
 function applyFilters(data, filters) {
   if(!filters||!filters.length) return data;
   return data.filter(function(r){
-    return filters.every(function(f){return String(r[f.col]||'').trim()===f.val;});
+    // AND across different filter rows, OR across selected values within one filter row
+    return filters.every(function(f){
+      var rv=String(r[f.col]||'').trim();
+      return f.vals ? f.vals.indexOf(rv)>=0 : rv===f.val;
+    });
   });
 }
 
@@ -1026,10 +986,8 @@ function runRecon() {
 
   var fd1=applyFilters(D[1],getRowFilters(1));
   var fd2=applyFilters(D[2],getRowFilters(2));
-  var vfFilters1=getVFs(1), vfFilters2=getVFs(2);
-  var fvd1=applyVFs(fd1,vfFilters1), fvd2=applyVFs(fd2,vfFilters2);
   var vmaps=getVmaps();
-  var ffd1=applyVmaps(fvd1,vmaps,1), ffd2=applyVmaps(fvd2,vmaps,2);
+  var ffd1=applyVmaps(fd1,vmaps,1), ffd2=applyVmaps(fd2,vmaps,2);
   var p1=buildSide(ffd1,rowCol1,rowNorm,p1pairs,agg1,si.f1src,si.f1pcol,si.f1vcol||amt1,'','',colNorm);
   var p2=buildSide(ffd2,rowCol2,rowNorm,p2pairs,agg2,si.f2src,si.f2pcol,si.f2vcol||amt2,'','',colNorm);
 
@@ -1305,14 +1263,14 @@ function exportCSV(){
 function resetAll(){
   D={1:[],2:[]};WB={1:null,2:null};PR=null;pC=0;vmapC=0;configReady=false;
   curView='all';openDrill=null;selRows=new Set();selCols=new Set();
-  vfC={1:0,2:0}; fcC={1:0,2:0};
+  fcC={1:0,2:0};
   document.getElementById('s1btn').disabled=true;
   document.getElementById('pairList').innerHTML='';
   document.getElementById('lbl1').value='';document.getElementById('lbl2').value='';
   SNAME={1:'File 1',2:'File 2'};
   document.querySelectorAll('.sname-1').forEach(function(el){el.textContent='File 1';});
   document.querySelectorAll('.sname-2').forEach(function(el){el.textContent='File 2';});
-  ['vflist1','vflist2','flist1','flist2','vmapList'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['flist1','flist2','vmapList'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
   [1,2].forEach(function(n){
     document.getElementById('zone'+n).classList.remove('loaded');
     document.getElementById('z'+n+'t').textContent='Click or drag file here';
